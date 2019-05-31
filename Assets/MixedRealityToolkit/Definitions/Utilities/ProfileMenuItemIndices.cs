@@ -21,6 +21,7 @@ namespace Microsoft.MixedReality.Toolkit.Utilities
         SpatialAwareness,   // todo: remove
         SpatialAwarenessMeshObserver,
         SpatialAwarenessSurfaceObserver,
+        Anchors,
         Gestures,
         Diagnostics,
         RegisteredServiceProviders,

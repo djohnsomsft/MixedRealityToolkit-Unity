@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using Microsoft.MixedReality.Toolkit.Anchors;
 using Microsoft.MixedReality.Toolkit.Boundary;
 using Microsoft.MixedReality.Toolkit.CameraSystem;
 using Microsoft.MixedReality.Toolkit.Diagnostics;
@@ -226,6 +227,46 @@ namespace Microsoft.MixedReality.Toolkit
         {
             get { return spatialAwarenessSystemProfile; }
             internal set { spatialAwarenessSystemProfile = value; }
+        }
+
+        [SerializeField]
+        [Tooltip("Enable the Anchors system on startup")]
+        private bool enableAnchorsSystem = false;
+
+        /// <summary>
+        /// Enable and configure the anchors system.
+        /// </summary>
+        public bool IsAnchorsSystemEnabled
+        {
+            get { return anchorsSystemType != null && anchorsSystemType.Type != null && enableAnchorsSystem; }
+            internal set { enableAnchorsSystem = value; }
+        }
+
+        [SerializeField]
+        [Tooltip("Anchors System Class to instantiate at runtime.")]
+        [Implements(typeof(IMixedRealityAnchorsSystem), TypeGrouping.ByNamespaceFlat)]
+        private SystemType anchorsSystemType;
+
+        /// <summary>
+        /// Anchors System class to instantiate at runtime.
+        /// </summary>
+        public SystemType AnchorsSystemSystemType
+        {
+            get { return anchorsSystemType; }
+            internal set { anchorsSystemType = value; }
+        }
+
+        [SerializeField]
+        [Tooltip("Profile for configuring the anchors system.")]
+        private MixedRealityAnchorsSystemProfile anchorsSystemProfile;
+
+        /// <summary>
+        /// Active profile for anchors system
+        /// </summary>
+        public MixedRealityAnchorsSystemProfile AnchorsSystemProfile
+        {
+            get { return anchorsSystemProfile; }
+            internal set { anchorsSystemProfile = value; }
         }
 
         [SerializeField]

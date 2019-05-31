@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.﻿
 
+using Microsoft.MixedReality.Toolkit.Anchors;
 using Microsoft.MixedReality.Toolkit.Boundary;
 using Microsoft.MixedReality.Toolkit.Input;
 using Microsoft.MixedReality.Toolkit.SpatialAwareness;
@@ -42,6 +43,11 @@ namespace Microsoft.MixedReality.Toolkit.Editor
         private SerializedProperty enableSpatialAwarenessSystem;
         private SerializedProperty spatialAwarenessSystemType;
         private SerializedProperty spatialAwarenessSystemProfile;
+        // Anchors system properties
+        private static bool showAnchorsProperties = true;
+        private SerializedProperty enableAnchorsSystem;
+        private SerializedProperty anchorsSystemType;
+        private SerializedProperty anchorsSystemProfile;
         // Diagnostic system properties
         private static bool showDiagnosticProperties = true;
         private SerializedProperty enableDiagnosticsSystem;
@@ -89,6 +95,10 @@ namespace Microsoft.MixedReality.Toolkit.Editor
             enableSpatialAwarenessSystem = serializedObject.FindProperty("enableSpatialAwarenessSystem");
             spatialAwarenessSystemType = serializedObject.FindProperty("spatialAwarenessSystemType");
             spatialAwarenessSystemProfile = serializedObject.FindProperty("spatialAwarenessSystemProfile");
+            // Anchors system configuration
+            enableAnchorsSystem = serializedObject.FindProperty("enableAnchorsSystem");
+            anchorsSystemType = serializedObject.FindProperty("anchorsSystemType");
+            anchorsSystemProfile = serializedObject.FindProperty("anchorsSystemProfile");
             // Diagnostics system configuration
             enableDiagnosticsSystem = serializedObject.FindProperty("enableDiagnosticsSystem");
             diagnosticsSystemType = serializedObject.FindProperty("diagnosticsSystemType");
@@ -266,6 +276,19 @@ namespace Microsoft.MixedReality.Toolkit.Editor
                     EditorGUILayout.PropertyField(spatialAwarenessSystemType);
                     EditorGUILayout.HelpBox("Spatial Awareness settings are configured per observer.", MessageType.Info);
                     changed |= RenderProfile(spatialAwarenessSystemProfile, true, typeof(IMixedRealitySpatialAwarenessSystem));
+                }
+            }
+
+            // Anchors System configuration
+            EditorGUILayout.Space();
+            showAnchorsProperties = EditorGUILayout.Foldout(showAnchorsProperties, "Anchors System Settings", true);
+            if (showAnchorsProperties)
+            {
+                using (new EditorGUI.IndentLevelScope())
+                {
+                    EditorGUILayout.PropertyField(enableAnchorsSystem);
+                    EditorGUILayout.PropertyField(anchorsSystemType);
+                    changed |= RenderProfile(anchorsSystemProfile, true, typeof(IMixedRealityAnchorsSystem));
                 }
             }
 
