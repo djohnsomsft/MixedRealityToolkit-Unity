@@ -15,6 +15,15 @@ namespace Microsoft.MixedReality.Toolkit.Anchors.Editor
     [CustomEditor(typeof(AzureSpatialAnchorsProviderProfile))]
     public class AzureSpatialAnchorsProviderProfileInspector : BaseMixedRealityToolkitConfigurationProfileInspector
     {
+        private static readonly string AzureSpatialAnchorsDefine = "MRTK_USING_AZURESPATIALANCHORS";
+
+        private static readonly BuildTargetGroup[] GroupsToBuildAzureSpatialAnchorsFor = new BuildTargetGroup[]
+        {
+            BuildTargetGroup.Android,
+            BuildTargetGroup.iOS,
+            BuildTargetGroup.WSA
+        };
+
         private SerializedProperty accountId;
         private SerializedProperty accountKey;
 
@@ -62,6 +71,27 @@ namespace Microsoft.MixedReality.Toolkit.Anchors.Editor
                 return;
             }
 
+            if (!IsBuildingWithAzureSpatialAnchors())
+            {
+                EditorGUILayout.HelpBox($"You must define {AzureSpatialAnchorsDefine} to turn on Azure Spatial Anchors functionality.", MessageType.Info);
+                if (GUILayout.Button("Click here to set it"))
+                {
+                    SetBuildWithAzureSpatialAnchors();
+                }
+                return;
+            }
+            else
+            {
+                if (GUILayout.Button("Remove Azure Spatial Anchors from build"))
+                {
+                    UnsetBuildWithAzureSpatialAnchors();
+                }
+            }
+
+            EditorGUILayout.PropertyField(accountId);
+            EditorGUILayout.PropertyField(accountKey);
+
+
             if (!changed)
             {
                 changed |= EditorGUI.EndChangeCheck();
@@ -76,6 +106,40 @@ namespace Microsoft.MixedReality.Toolkit.Anchors.Editor
                 {
                     EditorApplication.delayCall += () => MixedRealityToolkit.Instance.ResetConfiguration(MixedRealityToolkit.Instance.ActiveProfile);
                 }
+            }
+        }
+
+        private bool IsBuildingWithAzureSpatialAnchors()
+        {
+            var symbols = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.WSA)?.Split(';');
+            return symbols != null && symbols.Any(s => s == AzureSpatialAnchorsDefine);
+        }
+
+        private void SetBuildWithAzureSpatialAnchors()
+        {
+            foreach (var group in GroupsToBuildAzureSpatialAnchorsFor)
+            {
+                var symbols = PlayerSettings.GetScriptingDefineSymbolsForGroup(group);
+                PlayerSettings.SetScriptingDefineSymbolsForGroup(group, symbols + ";" + AzureSpatialAnchorsDefine);
+            }
+        }
+
+        private void UnsetBuildWithAzureSpatialAnchors()
+        {
+            foreach (var group in GroupsToBuildAzureSpatialAnchorsFor)
+            {
+                var symbols = PlayerSettings.GetScriptingDefineSymbolsForGroup(group)?.Split(';');
+
+                // Isn't present, skip
+                if (symbols == null)
+                {
+                    Debug.LogWarning("Didn't find Azure Spatial Anchors compile define for build group " + group);
+                    continue;
+                }
+
+                PlayerSettings.SetScriptingDefineSymbolsForGroup(
+                    group,
+                    string.Join(";", symbols.Where(s => s != AzureSpatialAnchorsDefine)));
             }
         }
     }

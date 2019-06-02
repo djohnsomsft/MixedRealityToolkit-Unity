@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using Microsoft.MixedReality.Toolkit.Anchors;
 using Microsoft.MixedReality.Toolkit.Boundary;
 using Microsoft.MixedReality.Toolkit.Diagnostics;
 using Microsoft.MixedReality.Toolkit.Input;
@@ -416,6 +417,16 @@ namespace Microsoft.MixedReality.Toolkit
                 if (!RegisterService<IMixedRealitySpatialAwarenessSystem>(ActiveProfile.SpatialAwarenessSystemSystemType, args: args) && SpatialAwarenessSystem != null)
                 {
                     Debug.LogError("Failed to start the Spatial Awareness System!");
+                }
+            }
+
+            // If the Anchors system has been selected for initialization in the Active profile, enable it in the project
+            if (ActiveProfile.IsAnchorsSystemEnabled)
+            {
+                object[] args = { this, ActiveProfile.AnchorsSystemProfile };
+                if (!RegisterService<IMixedRealityAnchorsSystem>(ActiveProfile.AnchorsSystemSystemType, args: args) && AnchorsSystem != null)
+                {
+                    Debug.LogError("Failed to start the Anchors System!");
                 }
             }
 
@@ -1268,6 +1279,35 @@ namespace Microsoft.MixedReality.Toolkit
         }
 
         private static bool logSpatialAwarenessSystem = true;
+
+        private static IMixedRealityAnchorsSystem anchorsSystem = null;
+
+        /// <summary>
+        /// The current Anchors System registered with the Mixed Reality Toolkit.
+        /// </summary>
+        public static IMixedRealityAnchorsSystem AnchorsSystem
+        {
+            get
+            {
+                if (isApplicationQuitting)
+                {
+                    return null;
+                }
+
+                if (anchorsSystem != null)
+                {
+                    return anchorsSystem;
+                }
+
+                anchorsSystem = Instance.GetService<IMixedRealityAnchorsSystem>(showLogs: logAnchorsSystem);
+                // If we found a valid system, then we turn logging back on for the next time we need to search.
+                // If we didn't find a valid system, then we stop logging so we don't spam the debug window.
+                logAnchorsSystem = anchorsSystem != null;
+                return anchorsSystem;
+            }
+        }
+
+        private static bool logAnchorsSystem = true;
 
         private static IMixedRealityTeleportSystem teleportSystem = null;
 

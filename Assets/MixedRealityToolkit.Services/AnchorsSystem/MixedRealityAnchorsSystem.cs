@@ -12,26 +12,51 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
     /// </summary>
     public class MixedRealityAnchorsSystem : BaseCoreSystem, IMixedRealityAnchorsSystem
     {
+#if MRTK_USING_AZURESPATIALANCHORS
+        AzureSpatialAnchorsProvider azureSpatialAnchorsProvider = null;
+#endif
+
+
         public MixedRealityAnchorsSystem(
             IMixedRealityServiceRegistrar registrar,
-            MixedRealityAnchorsSystemProfile profile = null) : base(registrar, profile)
+            MixedRealityAnchorsSystemProfile profile) : base(registrar, profile)
         {
-            // TODO
+            if (profile != null)
+            {
+                if (profile.cloudAnchorsProviderProfile != null)
+                {
+                    if (profile.cloudAnchorsProviderProfile is AzureSpatialAnchorsProviderProfile)
+                    {
+#if MRTK_USING_AZURESPATIALANCHORS
+                        var azureSpatialAnchorsProviderProfile = (AzureSpatialAnchorsProviderProfile)profile.cloudAnchorsProviderProfile;
+                        azureSpatialAnchorsProvider = new AzureSpatialAnchorsProvider(
+                            azureSpatialAnchorsProviderProfile.accountId,
+                            azureSpatialAnchorsProviderProfile.accountKey);
+#elif !UNITY_EDITOR
+                        Debug.LogWarning("AzureSpatialAnchorsProvider was not loaded because it is not enabled in this build. If this wasn't intentional, enable it from the profile.");
+#endif
+                    }
+                }
+            }
         }
 
-        #region IMixedRealityService Implementation
+#region IMixedRealityService Implementation
 
         /// <inheritdoc/>
         public override void Initialize()
         {
             if (!Application.isPlaying) { return; }
 
-            // TODO
+#if MRTK_USING_AZURESPATIALANCHORS
+            // TODO: Initialize AzureSpatialAnchorsProvider
+#endif
         }
 
         public override void Destroy()
         {
-            // TODO
+#if MRTK_USING_AZURESPATIALANCHORS
+            // TODO: Cleanup AzureSpatialAnchorsProvider
+#endif
         }
 
         #endregion IMixedRealityService Implementation
@@ -57,7 +82,7 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
             return Mathf.Abs(SourceName.GetHashCode());
         }
 
-        #endregion IMixedRealityEventSource Implementation
+#endregion IMixedRealityEventSource Implementation
         
     }
 }
