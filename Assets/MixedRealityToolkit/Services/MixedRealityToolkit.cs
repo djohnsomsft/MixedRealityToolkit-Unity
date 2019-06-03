@@ -1008,6 +1008,7 @@ namespace Microsoft.MixedReality.Toolkit
                    typeof(IMixedRealityTeleportSystem).IsAssignableFrom(type) ||
                    typeof(IMixedRealityBoundarySystem).IsAssignableFrom(type) ||
                    typeof(IMixedRealitySpatialAwarenessSystem).IsAssignableFrom(type) ||
+                   typeof(IMixedRealityAnchorsSystem).IsAssignableFrom(type) ||
                    typeof(IMixedRealityDiagnosticsSystem).IsAssignableFrom(type);
         }
 

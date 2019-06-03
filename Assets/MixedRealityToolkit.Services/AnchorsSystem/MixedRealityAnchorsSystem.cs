@@ -14,7 +14,9 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
     /// </summary>
     public class MixedRealityAnchorsSystem : BaseCoreSystem, IMixedRealityAnchorsSystem
     {
-        IAzureSpatialAnchorsProvider azureSpatialAnchorsProvider = null;
+#if MRTK_USING_AZURESPATIALANCHORS
+        private IAzureSpatialAnchorsProvider azureSpatialAnchorsProvider = null;
+#endif
 
         public MixedRealityAnchorsSystem(
             IMixedRealityServiceRegistrar registrar,
@@ -79,9 +81,9 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
 #endif
         }
 
-        #endregion IMixedRealityService Implementation
+#endregion IMixedRealityService Implementation
 
-        #region IMixedRealityEventSource Implementation
+#region IMixedRealityEventSource Implementation
 
         /// <inheritdoc />
         public uint SourceId { get; } = 0;
