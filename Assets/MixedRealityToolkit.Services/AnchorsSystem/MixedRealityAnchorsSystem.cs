@@ -1,8 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Microsoft.MixedReality.Toolkit.Anchors
@@ -12,10 +14,7 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
     /// </summary>
     public class MixedRealityAnchorsSystem : BaseCoreSystem, IMixedRealityAnchorsSystem
     {
-#if MRTK_USING_AZURESPATIALANCHORS
-        AzureSpatialAnchorsProvider azureSpatialAnchorsProvider = null;
-#endif
-
+        IAzureSpatialAnchorsProvider azureSpatialAnchorsProvider = null;
 
         public MixedRealityAnchorsSystem(
             IMixedRealityServiceRegistrar registrar,
@@ -29,9 +28,24 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
                     {
 #if MRTK_USING_AZURESPATIALANCHORS
                         var azureSpatialAnchorsProviderProfile = (AzureSpatialAnchorsProviderProfile)profile.cloudAnchorsProviderProfile;
-                        azureSpatialAnchorsProvider = new AzureSpatialAnchorsProvider(
-                            azureSpatialAnchorsProviderProfile.accountId,
-                            azureSpatialAnchorsProviderProfile.accountKey);
+
+                        // Because the Azure Spatial Anchors plugin is implmented in user scripts,
+                        // we have to infer it at runtime to avoid a circular dependency
+                        var azureSpatialAnchorsProviderType = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetTypes()).FirstOrDefault(
+                            t => t.Namespace == "Microsoft.MixedReality.Toolkit.Anchors" && t.Name == "AzureSpatialAnchorsProvider");
+
+                        if (azureSpatialAnchorsProviderType != null)
+                        {
+                            azureSpatialAnchorsProvider = (IAzureSpatialAnchorsProvider)Activator.CreateInstance(
+                                azureSpatialAnchorsProviderType,
+                                azureSpatialAnchorsProviderProfile.accountId,
+                                azureSpatialAnchorsProviderProfile.accountKey);
+                            azureSpatialAnchorsProvider.VerboseLogging = azureSpatialAnchorsProviderProfile.verboseLogging;
+                        }
+                        else
+                        {
+                            Debug.Log("Unknown error locating AzureSpatialAnchorsProvider");
+                        }
 #elif !UNITY_EDITOR
                         Debug.LogWarning("AzureSpatialAnchorsProvider was not loaded because it is not enabled in this build. If this wasn't intentional, enable it from the profile.");
 #endif
@@ -48,14 +62,20 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
             if (!Application.isPlaying) { return; }
 
 #if MRTK_USING_AZURESPATIALANCHORS
-            // TODO: Initialize AzureSpatialAnchorsProvider
+            if (azureSpatialAnchorsProvider != null)
+            {
+                azureSpatialAnchorsProvider.Initialize();
+            }
 #endif
         }
 
         public override void Destroy()
         {
 #if MRTK_USING_AZURESPATIALANCHORS
-            // TODO: Cleanup AzureSpatialAnchorsProvider
+            if (azureSpatialAnchorsProvider != null)
+            {
+                azureSpatialAnchorsProvider.Destroy();
+            }
 #endif
         }
 

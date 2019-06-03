@@ -26,6 +26,7 @@ namespace Microsoft.MixedReality.Toolkit.Anchors.Editor
 
         private SerializedProperty accountId;
         private SerializedProperty accountKey;
+        private SerializedProperty verboseLogging;
 
         protected override void OnEnable()
         {
@@ -33,6 +34,7 @@ namespace Microsoft.MixedReality.Toolkit.Anchors.Editor
 
             accountId = serializedObject.FindProperty("accountId");
             accountKey = serializedObject.FindProperty("accountKey");
+            verboseLogging = serializedObject.FindProperty("verboseLogging");
         }
 
         public override void OnInspectorGUI()
@@ -88,9 +90,14 @@ namespace Microsoft.MixedReality.Toolkit.Anchors.Editor
                 }
             }
 
+            if (GUILayout.Button("Click for help getting started"))
+            {
+                Application.OpenURL("https://docs.microsoft.com/en-us/azure/spatial-anchors/quickstarts/get-started-unity-hololens");
+            }
+
             EditorGUILayout.PropertyField(accountId);
             EditorGUILayout.PropertyField(accountKey);
-
+            EditorGUILayout.PropertyField(verboseLogging);
 
             if (!changed)
             {
