@@ -27,8 +27,8 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
     /// </summary>
     public class PersistentAnchor : MonoBehaviour
     {
-        // Disable warnings for fields not set as these are set in the editor
-#pragma warning disable 0649
+        // Disable warnings for fields not set/used as these are set in the editor
+#pragma warning disable CS0414, CS0649
         [SerializeField]
         [Tooltip("ID in local anchor store for this anchor")]
         private string localIdentity = null;
@@ -48,15 +48,17 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         [SerializeField]
         [Tooltip("Automatically update the local anchor")]
         private bool azureAutoUpdateLocal = false;
-#pragma warning restore 0649
+#pragma warning restore CS0414, CS0649
 
         private void Awake()
         {
             CurrentAnchor = GetComponent<AnchorComponentType>();
-            AzureAnchorId = azureIdentity;
-            AzureAnchorProperties = new Dictionary<string, string>();
-            AzureAnchorName = azureName;
-            AzureAnchorSource = null;
+#if MRTK_USING_AZURESPATIALANCHORS
+            if (MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors != null)
+            {
+                AzureAnchor = MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.GetNewAnchor();
+            }
+#endif
 
             if (localAutoLoad)
             {
@@ -78,6 +80,12 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         {
             get
             {
+                // If the old anchor was deleted we may need to reacquire it
+                if (currentAnchor == null)
+                {
+                    currentAnchor = GetComponent<AnchorComponentType>();
+                }
+
                 return currentAnchor;
             }
             private set
@@ -153,73 +161,30 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
 
         #region Azure Anchor
 
-        // TODO: Make a more generic query
-        private static readonly string AzureNameProperty = "PersistentAnchor_Name";
-
         /// <summary>
-        /// Anchor name assigned in Azure Spatial Anchors for this anchor
+        /// Anchor data for Azure Spatial Anchors anchor
         /// </summary>
-        public string AzureAnchorName
+        public IAzureAnchorData AzureAnchor
         {
-            get
+            get => azureAnchor;
+            private set
             {
-                return azureAnchorName;
-            }
-            set
-            {
-                if (CanMatchAzureAnchor() && MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors != null)
+#if MRTK_USING_AZURESPATIALANCHORS
+                if (azureAnchor != null && MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors != null)
                 {
                     MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.AnchorLocated -= AzureSpatialAnchorsProvider_AnchorLocated;
                 }
 
-                azureAnchorName = value;
-                AzureAnchorProperties[AzureNameProperty] = value;
+                azureAnchor = value;
 
-                if (CanMatchAzureAnchor() && MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors != null)
+                if (azureAnchor != null && MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors != null)
                 {
                     MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.AnchorLocated += AzureSpatialAnchorsProvider_AnchorLocated;
                 }
+#endif
             }
         }
-
-        private string azureAnchorName;
-
-        /// <summary>
-        /// Anchor ID used by the Azure Spatial Anchors service for this anchor
-        /// </summary>
-        public string AzureAnchorId
-        {
-            get
-            {
-                return azureAnchorId;
-            }
-            set
-            {
-                if (CanMatchAzureAnchor() && MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors != null)
-                {
-                    MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.AnchorLocated -= AzureSpatialAnchorsProvider_AnchorLocated;
-                }
-
-                azureAnchorId = value;
-
-                if (CanMatchAzureAnchor() && MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors != null)
-                {
-                    MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.AnchorLocated += AzureSpatialAnchorsProvider_AnchorLocated;
-                }
-            }
-        }
-
-        private string azureAnchorId;
-
-        /// <summary>
-        /// Properties associated with the Azure Spatial Anchors service anchor
-        /// </summary>
-        public Dictionary<string, string> AzureAnchorProperties { get; set; }
-
-        /// <summary>
-        /// The source CloudSpatialAnchor for the anchor, if it has been found in Azure Spatial Anchors
-        /// </summary>
-        public object AzureAnchorSource { get; private set; }
+        private IAzureAnchorData azureAnchor = null;
 
         /// <summary>
         /// Update the local anchor automatically when the Azure Spatial Anchor is updated
@@ -227,24 +192,29 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         public bool AzureAutoUpdateLocal { get => azureAutoUpdateLocal; set => azureAutoUpdateLocal = value; }
 
         /// <summary>
-        /// Clears the cached Azure anchor data
+        /// Saves the anchor to the Azure Spatial Anchors service
         /// </summary>
-        public void ClearCachedAzureAnchor()
+        public void SaveAzureAnchorAsync()
         {
-            AzureAnchorSource = null;
+#if MRTK_USING_AZURESPATIALANCHORS
+            if (MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors != null)
+            {
+                MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.CommitAnchorAsync(gameObject);
+            }
+#endif
         }
 
-        private bool CanMatchAzureAnchor()
-        {
-            return !string.IsNullOrEmpty(AzureAnchorId) || !string.IsNullOrEmpty(AzureAnchorName);
-        }
-
+#if MRTK_USING_AZURESPATIALANCHORS
         private void AzureSpatialAnchorsProvider_AnchorLocated(AzureAnchorLocatedEventArgs args)
         {
-            // Match by the cached anchor ID or by the user-defined ID
-            string persistentId;
-            if (args.Identifier == AzureAnchorId ||
-                (args.Properties.TryGetValue(AzureNameProperty, out persistentId) && AzureAnchorName == persistentId))
+            // Skip if it has already been consumed
+            if (args.Consumed)
+            {
+                return;
+            }
+
+            // Match by the cached anchor ID or by the user-defined Name
+            if (args.Anchor.Identifier == AzureAnchor.Identifier || args.Anchor.Name == AzureAnchor.Name)
             {
                 if (CurrentAnchor == null)
                 {
@@ -252,32 +222,25 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
                     currentAnchor = gameObject.AddComponent<AnchorComponentType>();
                 }
 
-                args.SyncToWorldAnchor(gameObject);
-                AzureAnchorId = args.Identifier;
-                AzureAnchorProperties = new Dictionary<string, string>(args.Properties);
-                string nameValue;
-                if (AzureAnchorProperties.TryGetValue(AzureNameProperty, out nameValue))
-                {
-                    AzureAnchorName = nameValue;
-                }
-                AzureAnchorSource = args.Source;
-                CurrentAnchor = GetComponent<AnchorComponentType>();
+                AzureAnchor = args.Anchor;
+                MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.UpdatePlatformAnchor(gameObject, args.Anchor);
 
                 if (AzureAutoUpdateLocal)
                 {
                     if (string.IsNullOrEmpty(localIdentity))
                     {
                         // Automatically create a name for the local cached anchor if not specified
-                        localIdentity = string.IsNullOrEmpty(AzureAnchorName) ?
-                            AzureAnchorId :
-                            AzureAnchorName;
+                        localIdentity = string.IsNullOrEmpty(AzureAnchor.Name) ?
+                            AzureAnchor.Identifier :
+                            AzureAnchor.Name;
                     }
 
                     SaveLocalAnchor();
                 }
             }
         }
+#endif
 
-        #endregion Azure Anchor
+#endregion Azure Anchor
     }
 }

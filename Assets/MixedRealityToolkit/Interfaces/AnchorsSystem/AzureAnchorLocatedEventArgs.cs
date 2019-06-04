@@ -5,7 +5,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.XR.WSA;
 
 namespace Microsoft.MixedReality.Toolkit.Anchors
 {
@@ -14,49 +13,32 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
     /// </summary>
     public class AzureAnchorLocatedEventArgs : EventArgs
     {
-        private Action<GameObject> callbackOnMatched;
+        /// <summary>
+        /// The anchor that was found
+        /// </summary>
+        public IAzureAnchorData Anchor { get; private set; }
 
         /// <summary>
-        /// Identifier for the found anchor
+        /// True if the anchor has already been consumed
         /// </summary>
-        public string Identifier { get; private set; }
+        public bool Consumed { get; private set; }
 
         /// <summary>
-        /// Properties of the found anchor
+        /// Consumes the anchor so that it is marked as having been matched
         /// </summary>
-        public IDictionary<string, string> Properties { get; private set; }
-
-        /// <summary>
-        /// Source CloudSpatialAnchor for the anchor
-        /// </summary>
-        public object Source { get; private set; }
+        public void Consume()
+        {
+            Consumed = true;
+        }
 
         /// <summary>
         /// For internal use
         /// </summary>
-        /// <param name="identifier">Identifier</param>
-        /// <param name="properties">Properties</param>
-        /// <param name="source">Source</param>
+        /// <param name="anchor">Anchor found</param>
         /// <param name="callbackOnMatched">Callback</param>
-        public AzureAnchorLocatedEventArgs(
-            string identifier,
-            IDictionary<string, string> properties,
-            object source,
-            Action<GameObject> callbackOnMatched)
+        public AzureAnchorLocatedEventArgs(IAzureAnchorData anchor)
         {
-            Identifier = identifier;
-            Properties = properties;
-            Source = source;
-            this.callbackOnMatched = callbackOnMatched;
-        }
-
-        /// <summary>
-        /// Call to request the WorldAnchor be synced to the anchor found
-        /// </summary>
-        /// <param name="objectToAnchor">Object to sync anchor to</param>
-        public void SyncToWorldAnchor(GameObject objectToAnchor)
-        {
-            callbackOnMatched(objectToAnchor);
+            Anchor = anchor;
         }
     }
 }

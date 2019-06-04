@@ -33,6 +33,25 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         void Reset();
 
         /// <summary>
+        /// Gets a new unsynced anchor object
+        /// </summary>
+        /// <returns>A new anchor data wrapper</returns>
+        IAzureAnchorData GetNewAnchor();
+
+        /// <summary>
+        /// Updates a GameObject's platform anchor with the Azure Spatial Anchor
+        /// </summary>
+        /// <param name="objectToUpdate">GameObject to update</param>
+        /// <param name="anchorToUpdateTo">Anchor received from Azure Spatial Anchors service to update to</param>
+        void UpdatePlatformAnchor(GameObject objectToUpdate, IAzureAnchorData anchorToUpdateTo);
+
+        /// <summary>
+        /// Commits an anchor on the target GameObject to the Azure Spatial Anchors service
+        /// </summary>
+        /// <param name="anchoredObject">Object to commit an anchor for</param>
+        void CommitAnchorAsync(GameObject anchoredObject);
+
+        /// <summary>
         /// Starts searching for anchors, optionally using limiting criteria
         /// </summary>
         /// <param name="identifiersToSearchFor">Specific identifiers to filter to, otherwise searches for any anchor</param>
@@ -70,5 +89,10 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         /// Event fired when an anchor is located by the service
         /// </summary>
         event Action<AzureAnchorLocatedEventArgs> AnchorLocated;
+
+        /// <summary>
+        /// Event fired when an anchor commit operation completes
+        /// </summary>
+        event Action<AzureAnchorCommitCompletedEventArgs> AnchorCommitCompleted;
     }
 }

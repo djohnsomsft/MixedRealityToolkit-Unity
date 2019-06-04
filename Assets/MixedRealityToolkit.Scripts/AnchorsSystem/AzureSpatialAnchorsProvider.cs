@@ -131,45 +131,97 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         /// <inheritdoc />
         public void Reset()
         {
-            Destroy();
-            Initialize();
+            cloudSession.Reset();
         }
 
         /// <inheritdoc />
-        public async void CommitAnchorAsync(
-            GameObject anchoredObject,
-            Action resultCallback)
+        public IAzureAnchorData GetNewAnchor()
+        {
+            return new AzureAnchorData();
+        }
+
+        /// <inheritdoc />
+        public void UpdatePlatformAnchor(GameObject objectToUpdate, IAzureAnchorData anchorToUpdateTo)
+        {
+            var anchorData = (AzureAnchorData)anchorToUpdateTo;
+            
+            if (!anchorData.Synced)
+            {
+                throw new InvalidOperationException("Cannot update to an anchor that wasn't synced with the service");
+            }
+
+            var cloudAnchor = anchorData.Source;
+            var ptr = cloudAnchor.LocalAnchor;
+#if WINDOWS_UWP
+            var worldAnchor = objectToUpdate.GetComponent<WorldAnchor>();
+            if (worldAnchor == null)
+            {
+                worldAnchor = objectToUpdate.AddComponent<WorldAnchor>();
+            }
+            worldAnchor.SetNativeSpatialAnchorPtr(ptr);
+#elif UNITY_IOS
+            var anchorData = UnityARSessionNativeInterface.UnityAnchorDataFromArkitAnchorPtr(ptr);
+            Matrix4x4 matrix4X4 = GetMatrix4x4FromUnityAr4x4(anchorData.transform);
+            var worldAnchor = objectToUpdate.GetComponent<UnityARUserAnchorComponent>();
+            if (worldAnchor != null)
+            {
+                Component.DestroyImmediate(worldAnchor);
+                worldAnchor = null;
+            }
+            loadedAnchorObject.transform.position = UnityARMatrixOps.GetPosition(matrix4X4);
+            loadedAnchorObject.transform.rotation = UnityARMatrixOps.GetRotation(matrix4X4);
+            objectToUpdate = objectToAnchor.AddComponent<UnityARUserAnchorComponent>();
+#elif UNITY_ANDROID
+            Debug.LogError("Android not currently supported");
+#endif
+
+            // Fire the event for the anchor being updated
+            var persistentAnchorComponent = objectToUpdate.GetComponent<PersistentAnchor>();
+            if (persistentAnchorComponent != null)
+            {
+                persistentAnchorComponent.AnchorUpdated.Invoke();
+            }
+        }
+
+        /// <inheritdoc />
+        public async void CommitAnchorAsync(GameObject anchoredObject)
         {
 #if UNITY_EDITOR
             Debug.LogError("Cannot commit an Azure Spatial Anchor in the editor");
             await System.Threading.Tasks.Task.CompletedTask;
 #else
-            var persistentAnchor = anchoredObject.GetComponent<PersistentAnchor>();
+            AzureAnchorCommitCompletedEventArgs result;
 
-            if (persistentAnchor == null)
+            try
             {
-                persistentAnchor = anchoredObject.AddComponent<PersistentAnchor>();
-            }
+                var persistentAnchor = anchoredObject.GetComponent<PersistentAnchor>();
 
-            if (persistentAnchor.CurrentAnchor == null)
-            {
-                persistentAnchor.CreateAnchor();
-            }
+                if (persistentAnchor == null)
+                {
+                    persistentAnchor = anchoredObject.AddComponent<PersistentAnchor>();
+                }
 
-            CloudSpatialAnchor workingAnchor = (CloudSpatialAnchor)persistentAnchor.AzureAnchorSource;
-            if (workingAnchor == null && !string.IsNullOrEmpty(persistentAnchor.AzureAnchorId))
-            {
-                workingAnchor = await cloudSession.GetAnchorPropertiesAsync(persistentAnchor.AzureAnchorId);
-            }
+                if (persistentAnchor.CurrentAnchor == null)
+                {
+                    persistentAnchor.CreateAnchor();
+                }
 
-            bool newAnchor = (workingAnchor == null);
-            
-            if (newAnchor)
-            {
-                workingAnchor = new CloudSpatialAnchor();
-            }
+                try
+                {
+                    CloudSpatialAnchor workingAnchor = ((AzureAnchorData)persistentAnchor.AzureAnchor).Source;
+                    if (workingAnchor == null && !persistentAnchor.AzureAnchor.Synced)
+                    {
+                        workingAnchor = await cloudSession.GetAnchorPropertiesAsync(persistentAnchor.AzureAnchor.Identifier);
+                    }
 
-            IntPtr anchorRawPointer = IntPtr.Zero;
+                    bool newAnchor = (workingAnchor == null);
+
+                    if (newAnchor)
+                    {
+                        workingAnchor = new CloudSpatialAnchor();
+                    }
+
+                    IntPtr anchorRawPointer = IntPtr.Zero;
 #if WINDOWS_UWP
             anchorRawPointer = persistentAnchor.CurrentAnchor.GetNativeSpatialAnchorPtr();
 #elif UNITY_IOS
@@ -178,30 +230,51 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
             Debug.LogError("Android currently not supported.");
 #endif
 
-            if (anchorRawPointer == null)
+                    if (anchorRawPointer == null)
+                    {
+                        // TODO: Return error
+                    }
+
+                    workingAnchor.LocalAnchor = anchorRawPointer;
+                    workingAnchor.AppProperties.Clear();
+                    foreach (var prop in persistentAnchor.AzureAnchor.Properties)
+                    {
+                        workingAnchor.AppProperties.Add(prop.Key, prop.Value);
+                    }
+
+                    if (newAnchor)
+                    {
+                        await cloudSession.CreateAnchorAsync(workingAnchor);
+                    }
+                    else
+                    {
+                        await cloudSession.UpdateAnchorPropertiesAsync(workingAnchor);
+                    }
+
+                    result = new AzureAnchorCommitCompletedEventArgs(anchoredObject, persistentAnchor.AzureAnchor);
+                }
+                // Exception while committing the CloudSpatialAnchor
+                catch (Exception e)
+                {
+                    result = new AzureAnchorCommitCompletedEventArgs(anchoredObject, persistentAnchor.AzureAnchor, e);
+                }
+            }
+            // Exception before CloudSpatialAnchor was acquired
+            catch (Exception e)
             {
-                // TODO: Return error
+                result = new AzureAnchorCommitCompletedEventArgs(anchoredObject, null, e);
             }
 
-            workingAnchor.LocalAnchor = anchorRawPointer;
-            workingAnchor.AppProperties.Clear();
-            foreach (var prop in persistentAnchor.AzureAnchorProperties)
+            // Call back on the main thread when results come in
+            SyncContextUtility.UnitySynchronizationContext.Send(x =>
             {
-                workingAnchor.AppProperties.Add(prop.Key, prop.Value);
-            }
-
-            if (newAnchor)
-            {
-                await cloudSession.CreateAnchorAsync(workingAnchor);
-            }
-            else
-            {
-                await cloudSession.UpdateAnchorPropertiesAsync(workingAnchor);
-            }
-
-            // TODO Handle results
+                if (AnchorCommitCompleted != null)
+                {
+                    AnchorCommitCompleted.Invoke(result);
+                }
+            }, null);
 #endif
-        }
+            }
 
         /// <inheritdoc />
         public int StartSearchingForAnchors(
@@ -239,7 +312,7 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
                 return BadSessionId;
             }
 
-            if (persistentAnchor.AzureAnchorSource == null)
+            if (persistentAnchor.AzureAnchor == null || !persistentAnchor.AzureAnchor.Synced)
             {
                 Debug.LogError("GameObject's PersistentAnchor has not yet been found, cannot search near it");
                 return BadSessionId;
@@ -249,7 +322,7 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
             {
                 NearAnchor = new NearAnchorCriteria()
                 {
-                    SourceAnchor = (CloudSpatialAnchor)persistentAnchor.AzureAnchorSource,
+                    SourceAnchor = ((AzureAnchorData)persistentAnchor.AzureAnchor).Source,
                     DistanceInMeters = distanceInMeters,
                     MaxResultCount = maxResultCount
                 },
@@ -296,6 +369,9 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         /// <inheritdoc />
         public event Action<AzureAnchorLocatedEventArgs> AnchorLocated;
 
+        /// <inheritdoc />
+        public event Action<AzureAnchorCommitCompletedEventArgs> AnchorCommitCompleted;
+
         private void CloudSession_SessionUpdated(object sender, SessionUpdatedEventArgs args)
         {
             ReadyForCreateProgress = args.Status.ReadyForCreateProgress;
@@ -329,54 +405,20 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
                 return;
             }
 
-            if (AnchorLocated != null)
-            {
-                bool consumed = false;
-                AnchorLocated.Invoke(new AzureAnchorLocatedEventArgs(
-                    args.Anchor.Identifier,
-                    args.Anchor.AppProperties,
-                    args.Anchor,
-                    objectToAnchor =>
-                    {
-                        SyncToAnchor(args.Anchor, objectToAnchor);
-                        consumed = true;
-                    }));
-                if (!consumed)
-                {
-                    // TODO: Fallback behavior
-                }
-            }
-        }
-
-        private void SyncToAnchor(CloudSpatialAnchor cloudAnchor, GameObject objectToAnchor)
-        {
+            // Call back on the main thread
+            var eventArgs = new AzureAnchorLocatedEventArgs(new AzureAnchorData(args.Anchor));
             SyncContextUtility.UnitySynchronizationContext.Send(x =>
             {
-                var ptr = cloudAnchor.LocalAnchor;
-#if WINDOWS_UWP
-                var worldAnchor = objectToAnchor.GetComponent<WorldAnchor>();
-                if (worldAnchor == null)
+                if (AnchorLocated != null)
                 {
-                    worldAnchor = objectToAnchor.AddComponent<WorldAnchor>();
+                    AnchorLocated.Invoke(eventArgs);
                 }
-                worldAnchor.SetNativeSpatialAnchorPtr(ptr);
-#elif UNITY_IOS
-                var anchorData = UnityARSessionNativeInterface.UnityAnchorDataFromArkitAnchorPtr(ptr);
-                Matrix4x4 matrix4X4 = GetMatrix4x4FromUnityAr4x4(anchorData.transform);
-                var worldAnchor = objectToAnchor.GetComponent<UnityARUserAnchorComponent>();
-                if (worldAnchor != null)
-                {
-                    Component.DestroyImmediate(worldAnchor);
-                    worldAnchor = null;
-                }
-                loadedAnchorObject.transform.position = UnityARMatrixOps.GetPosition(matrix4X4);
-                loadedAnchorObject.transform.rotation = UnityARMatrixOps.GetRotation(matrix4X4);
-                worldAnchor = objectToAnchor.AddComponent<UnityARUserAnchorComponent>();
-#elif UNITY_ANDROID
-                Debug.LogError("Android not currently supported");
-#endif
-            },
-            null);
+            }, null);
+
+            if (!eventArgs.Consumed)
+            {
+                // TODO: Additional behavior for unclaimed anchors
+            }
         }
 
         private void CloudSession_LocateAnchorsCompleted(object sender, EventArgs e)
