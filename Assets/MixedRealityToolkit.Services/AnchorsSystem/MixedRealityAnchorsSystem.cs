@@ -68,6 +68,7 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
                                 azureSpatialAnchorsProviderType,
                                 azureSpatialAnchorsProviderProfile.accountId,
                                 azureSpatialAnchorsProviderProfile.accountKey);
+                            azureSpatialAnchorsProvider.Active = azureSpatialAnchorsProviderProfile.autoStart;
                             azureSpatialAnchorsProvider.VerboseLogging = azureSpatialAnchorsProviderProfile.verboseLogging;
                         }
                         else

@@ -24,6 +24,7 @@ namespace Microsoft.MixedReality.Toolkit.Anchors.Editor
 
         private SerializedProperty accountId;
         private SerializedProperty accountKey;
+        private SerializedProperty autoStart;
         private SerializedProperty verboseLogging;
 
         protected override void OnEnable()
@@ -32,6 +33,7 @@ namespace Microsoft.MixedReality.Toolkit.Anchors.Editor
 
             accountId = serializedObject.FindProperty("accountId");
             accountKey = serializedObject.FindProperty("accountKey");
+            autoStart = serializedObject.FindProperty("autoStart");
             verboseLogging = serializedObject.FindProperty("verboseLogging");
         }
 
@@ -95,6 +97,7 @@ namespace Microsoft.MixedReality.Toolkit.Anchors.Editor
 
             EditorGUILayout.PropertyField(accountId);
             EditorGUILayout.PropertyField(accountKey);
+            EditorGUILayout.PropertyField(autoStart);
             EditorGUILayout.PropertyField(verboseLogging);
 
             if (!changed)

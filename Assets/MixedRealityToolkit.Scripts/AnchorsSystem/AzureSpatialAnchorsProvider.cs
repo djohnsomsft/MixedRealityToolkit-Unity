@@ -47,6 +47,34 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         /// <inheritdoc />
         public bool VerboseLogging { get; set; }
 
+        /// <inheritdoc />
+        public bool Active
+        {
+            get
+            {
+                return active;
+            }
+            set
+            {
+                if (active != value)
+                {
+                    if (cloudSession != null)
+                    {
+                        if (value)
+                        {
+                            cloudSession.Start();
+                        }
+                        else
+                        {
+                            cloudSession.Stop();
+                        }
+                    }
+                    active = value;
+                }
+            }
+        }
+        private bool active = false;
+
         /// <summary>
         /// The active session with the Azure Spatial Anchors service
         /// </summary>
@@ -94,8 +122,8 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
 
             cloudSession = new CloudSpatialAnchorSession();
             cloudSession.LogLevel = SessionLogLevel.All;
-            cloudSession.Configuration.AccountId = this.accountId;
-            cloudSession.Configuration.AccountKey = this.accountKey;
+            cloudSession.Configuration.AccountId = accountId;
+            cloudSession.Configuration.AccountKey = accountKey;
 
             cloudSession.SessionUpdated += CloudSession_SessionUpdated;
             cloudSession.Error += CloudSession_Error;
@@ -115,7 +143,10 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
             // GoogleARCoreInternal.ARCoreAndroidLifecycleManager.Instance.NativeSession.SessionHandle;
 #endif
 
-            cloudSession.Start();
+            if (Active)
+            {
+                cloudSession.Start();
+            }
         }
 
         /// <inheritdoc />
@@ -274,7 +305,13 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
                 }
             }, null);
 #endif
-            }
+        }
+
+        /// <inheritdoc />
+        public async void DeleteAnchorAsync(IAzureAnchorData anchor)
+        {
+            await cloudSession.DeleteAnchorAsync(((AzureAnchorData)anchor).Source);
+        }
 
         /// <inheritdoc />
         public int StartSearchingForAnchors(

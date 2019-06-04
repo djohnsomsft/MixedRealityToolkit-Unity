@@ -18,6 +18,11 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         bool VerboseLogging { get; set; }
 
         /// <summary>
+        /// If true actively scanning the environment. If false, scanning and locating are paused.
+        /// </summary>
+        bool Active { get; set; }
+
+        /// <summary>
         /// Initialize the provider
         /// </summary>
         void Initialize();
@@ -50,6 +55,12 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         /// </summary>
         /// <param name="anchoredObject">Object to commit an anchor for</param>
         void CommitAnchorAsync(GameObject anchoredObject);
+
+        /// <summary>
+        /// Delete the anchor from the Azure Spatial Anchors store
+        /// </summary>
+        /// <param name="anchor">Anchor to delete</param>
+        void DeleteAnchorAsync(IAzureAnchorData anchor);
 
         /// <summary>
         /// Starts searching for anchors, optionally using limiting criteria

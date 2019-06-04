@@ -16,6 +16,10 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         public string accountKey = null;
 
         [SerializeField]
+        [Tooltip("True to immediately start environmental scanning")]
+        public bool autoStart = true;
+
+        [SerializeField]
         [Tooltip("Enable verbose logging of message from the Azure Spatial Anchors service")]
         public bool verboseLogging = false;
     }
