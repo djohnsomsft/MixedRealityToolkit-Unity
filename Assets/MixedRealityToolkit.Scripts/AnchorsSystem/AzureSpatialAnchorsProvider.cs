@@ -136,6 +136,74 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         }
 
         /// <inheritdoc />
+        public async void CommitAnchorAsync(
+            GameObject anchoredObject,
+            Action resultCallback)
+        {
+#if UNITY_EDITOR
+            Debug.LogError("Cannot commit an Azure Spatial Anchor in the editor");
+            await System.Threading.Tasks.Task.CompletedTask;
+#else
+            var persistentAnchor = anchoredObject.GetComponent<PersistentAnchor>();
+
+            if (persistentAnchor == null)
+            {
+                persistentAnchor = anchoredObject.AddComponent<PersistentAnchor>();
+            }
+
+            if (persistentAnchor.CurrentAnchor == null)
+            {
+                persistentAnchor.CreateAnchor();
+            }
+
+            CloudSpatialAnchor workingAnchor = (CloudSpatialAnchor)persistentAnchor.AzureAnchorSource;
+            if (workingAnchor == null && !string.IsNullOrEmpty(persistentAnchor.AzureAnchorId))
+            {
+                workingAnchor = await cloudSession.GetAnchorPropertiesAsync(persistentAnchor.AzureAnchorId);
+            }
+
+            bool newAnchor = (workingAnchor == null);
+            
+            if (newAnchor)
+            {
+                workingAnchor = new CloudSpatialAnchor();
+            }
+
+            IntPtr anchorRawPointer = IntPtr.Zero;
+#if WINDOWS_UWP
+            anchorRawPointer = persistentAnchor.CurrentAnchor.GetNativeSpatialAnchorPtr();
+#elif UNITY_IOS
+            anchorRawPointer = UnityARSessionNativeInterface.GetARSessionNativeInterface().GetArAnchorPointerForId(persistentAnchor.CurrentAnchor..AnchorId);
+#elif UNITY_ANDROID
+            Debug.LogError("Android currently not supported.");
+#endif
+
+            if (anchorRawPointer == null)
+            {
+                // TODO: Return error
+            }
+
+            workingAnchor.LocalAnchor = anchorRawPointer;
+            workingAnchor.AppProperties.Clear();
+            foreach (var prop in persistentAnchor.AzureAnchorProperties)
+            {
+                workingAnchor.AppProperties.Add(prop.Key, prop.Value);
+            }
+
+            if (newAnchor)
+            {
+                await cloudSession.CreateAnchorAsync(workingAnchor);
+            }
+            else
+            {
+                await cloudSession.UpdateAnchorPropertiesAsync(workingAnchor);
+            }
+
+            // TODO Handle results
+#endif
+        }
+
+        /// <inheritdoc />
         public int StartSearchingForAnchors(
             string[] identifiersToSearchFor = null,
             bool bypassCache = false,

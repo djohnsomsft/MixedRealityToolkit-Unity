@@ -29,10 +29,12 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
 
         private bool showAzureIdentity = true;
         private SerializedProperty azureIdentity;
+        private SerializedProperty azureName;
         private SerializedProperty azureAutoUpdateLocal;
 
         private static readonly GUIContent IdLabel = new GUIContent("ID");
         private static readonly GUIContent AutoLoadLabel = new GUIContent("Auto Load");
+        private static readonly GUIContent NameLabel = new GUIContent("Name");
         private static readonly GUIContent AutoUpdateLocalLabel = new GUIContent("Auto Update Local");
 
         protected virtual void OnEnable()
@@ -49,7 +51,8 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
             localAutoLoad = serializedObject.FindProperty("localAutoLoad");
 
             azureIdentity = serializedObject.FindProperty("azureIdentity");
-            if (!string.IsNullOrEmpty(azureIdentity.stringValue))
+            azureName = serializedObject.FindProperty("azureName");
+            if (!string.IsNullOrEmpty(azureIdentity.stringValue) || !string.IsNullOrEmpty(azureName.stringValue))
             {
                 identitiesEnabled |= IdentityTypes.Azure;
             }
@@ -76,10 +79,8 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
                 if (showAzureIdentity)
                 {
                     EditorGUILayout.PropertyField(azureIdentity, IdLabel);
-                    if ((identitiesEnabled & IdentityTypes.Local) != IdentityTypes.None)
-                    {
-                        EditorGUILayout.PropertyField(azureAutoUpdateLocal, AutoUpdateLocalLabel);
-                    }
+                    EditorGUILayout.PropertyField(azureName, NameLabel);
+                    EditorGUILayout.PropertyField(azureAutoUpdateLocal, AutoUpdateLocalLabel);
                 }
             }
 
