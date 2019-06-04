@@ -6,6 +6,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.XR.WSA.Persistence;
 
 namespace Microsoft.MixedReality.Toolkit.Anchors
 {
@@ -14,6 +16,10 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
     /// </summary>
     public class MixedRealityAnchorsSystem : BaseCoreSystem, IMixedRealityAnchorsSystem
     {
+        private bool localAnchorStoreEnabled;
+        private List<Action> localAnchorsReadyCallbacks = new List<Action>();
+        private WorldAnchorStore worldAnchorStore = null;
+
 #if MRTK_USING_AZURESPATIALANCHORS
         private IAzureSpatialAnchorsProvider azureSpatialAnchorsProvider = null;
 #endif
@@ -24,6 +30,26 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         {
             if (profile != null)
             {
+                localAnchorStoreEnabled =
+#if WINDOWS_UWP
+                    profile.enableLocalAnchorStore;
+#else
+                    // Don't enable the local anchor store in the editor or unsupported platforms
+                    false;
+#endif
+                if (localAnchorStoreEnabled)
+                {
+                    WorldAnchorStore.GetAsync(value =>
+                    {
+                        worldAnchorStore = value;
+                        foreach (var callback in localAnchorsReadyCallbacks)
+                        {
+                            callback.Invoke();
+                        }
+                        localAnchorsReadyCallbacks.Clear();
+                    });
+                }
+
                 if (profile.cloudAnchorsProviderProfile != null)
                 {
                     if (profile.cloudAnchorsProviderProfile is AzureSpatialAnchorsProviderProfile)
@@ -53,6 +79,40 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
 #endif
                     }
                 }
+            }
+        }
+
+        /// <inheritdoc />
+        public WorldAnchorStore LocalAnchors { get; private set; }
+
+        /// <inheritdoc />
+        public void RegisterForLocalAnchorsReadyCallback(Action callback)
+        {
+            if (!localAnchorStoreEnabled)
+            {
+                return;
+            }
+
+            if (worldAnchorStore != null)
+            {
+                callback();
+            }
+            else
+            {
+                localAnchorsReadyCallbacks.Add(callback);
+            }
+        }
+
+        /// <inheritdoc />
+        public IAzureSpatialAnchorsProvider AzureSpatialAnchors
+        {
+            get
+            {
+#if MRTK_USING_AZURESPATIALANCHORS
+                return azureSpatialAnchorsProvider;
+#else
+                return null;
+#endif
             }
         }
 
