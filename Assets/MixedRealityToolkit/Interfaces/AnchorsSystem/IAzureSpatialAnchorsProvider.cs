@@ -102,6 +102,11 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         event Action<AzureAnchorLocatedEventArgs> AnchorLocated;
 
         /// <summary>
+        /// Event fired when an anchor is located by the service and is not consumed by any existing subscribers
+        /// </summary>
+        event Action<AzureAnchorLocatedEventArgs> NewAnchorLocated;
+
+        /// <summary>
         /// Event fired when an anchor commit operation completes
         /// </summary>
         event Action<AzureAnchorCommitCompletedEventArgs> AnchorCommitCompleted;

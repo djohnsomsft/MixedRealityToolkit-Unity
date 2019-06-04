@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-#if MRTK_USING_AZURESPATIALANCHORS
+#if MRTK_USING_AZURESPATIALANCHORS && !UNITY_EDITOR
 using Microsoft.Azure.SpatialAnchors;
 using Microsoft.MixedReality.Toolkit.Utilities;
 using System;
@@ -217,10 +217,6 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         /// <inheritdoc />
         public async void CommitAnchorAsync(GameObject anchoredObject)
         {
-#if UNITY_EDITOR
-            Debug.LogError("Cannot commit an Azure Spatial Anchor in the editor");
-            await System.Threading.Tasks.Task.CompletedTask;
-#else
             AzureAnchorCommitCompletedEventArgs result;
 
             try
@@ -304,7 +300,6 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
                     AnchorCommitCompleted.Invoke(result);
                 }
             }, null);
-#endif
         }
 
         /// <inheritdoc />
@@ -407,6 +402,9 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         public event Action<AzureAnchorLocatedEventArgs> AnchorLocated;
 
         /// <inheritdoc />
+        public event Action<AzureAnchorLocatedEventArgs> NewAnchorLocated;
+
+        /// <inheritdoc />
         public event Action<AzureAnchorCommitCompletedEventArgs> AnchorCommitCompleted;
 
         private void CloudSession_SessionUpdated(object sender, SessionUpdatedEventArgs args)
@@ -452,9 +450,16 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
                 }
             }, null);
 
+            // If no existing subscribers claimed the anchor, we fire another event to allow responses such as creating a new object
             if (!eventArgs.Consumed)
             {
-                // TODO: Additional behavior for unclaimed anchors
+                SyncContextUtility.UnitySynchronizationContext.Send(x =>
+                {
+                    if (NewAnchorLocated != null)
+                    {
+                        NewAnchorLocated.Invoke(eventArgs);
+                    }
+                }, null);
             }
         }
 

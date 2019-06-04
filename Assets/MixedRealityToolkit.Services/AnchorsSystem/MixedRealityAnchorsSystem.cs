@@ -20,7 +20,7 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         private List<Action> localAnchorsReadyCallbacks = new List<Action>();
         private WorldAnchorStore worldAnchorStore = null;
 
-#if MRTK_USING_AZURESPATIALANCHORS
+#if MRTK_USING_AZURESPATIALANCHORS && !UNITY_EDITOR
         private IAzureSpatialAnchorsProvider azureSpatialAnchorsProvider = null;
 #endif
 
@@ -31,7 +31,7 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
             if (profile != null)
             {
                 localAnchorStoreEnabled =
-#if WINDOWS_UWP
+#if WINDOWS_UWP && !UNITY_EDITOR
                     profile.enableLocalAnchorStore;
 #else
                     // Don't enable the local anchor store in the editor or unsupported platforms
@@ -54,7 +54,7 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
                 {
                     if (profile.cloudAnchorsProviderProfile is AzureSpatialAnchorsProviderProfile)
                     {
-#if MRTK_USING_AZURESPATIALANCHORS
+#if MRTK_USING_AZURESPATIALANCHORS && !UNITY_EDITOR
                         var azureSpatialAnchorsProviderProfile = (AzureSpatialAnchorsProviderProfile)profile.cloudAnchorsProviderProfile;
 
                         // Because the Azure Spatial Anchors plugin is implmented in user scripts,
@@ -109,7 +109,7 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         {
             get
             {
-#if MRTK_USING_AZURESPATIALANCHORS
+#if MRTK_USING_AZURESPATIALANCHORS && !UNITY_EDITOR
                 return azureSpatialAnchorsProvider;
 #else
                 return null;
@@ -124,7 +124,7 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         {
             if (!Application.isPlaying) { return; }
 
-#if MRTK_USING_AZURESPATIALANCHORS
+#if MRTK_USING_AZURESPATIALANCHORS && !UNITY_EDITOR
             if (azureSpatialAnchorsProvider != null)
             {
                 azureSpatialAnchorsProvider.Initialize();
@@ -134,7 +134,7 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
 
         public override void Destroy()
         {
-#if MRTK_USING_AZURESPATIALANCHORS
+#if MRTK_USING_AZURESPATIALANCHORS && !UNITY_EDITOR
             if (azureSpatialAnchorsProvider != null)
             {
                 azureSpatialAnchorsProvider.Destroy();
@@ -142,9 +142,9 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
 #endif
         }
 
-#endregion IMixedRealityService Implementation
+        #endregion IMixedRealityService Implementation
 
-#region IMixedRealityEventSource Implementation
+        #region IMixedRealityEventSource Implementation
 
         /// <inheritdoc />
         public uint SourceId { get; } = 0;
