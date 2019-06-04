@@ -50,13 +50,111 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         private bool azureAutoUpdateLocal = false;
 #pragma warning restore 0649
 
-        // TODO: Make a more generic query
-        private static readonly string AzureNameProperty = "PersistentAnchor_Name";
+        private void Awake()
+        {
+            CurrentAnchor = GetComponent<AnchorComponentType>();
+            AzureAnchorId = azureIdentity;
+            AzureAnchorProperties = new Dictionary<string, string>();
+            AzureAnchorName = azureName;
+            AzureAnchorSource = null;
+
+            if (localAutoLoad)
+            {
+                LoadLocalAnchor();
+            }
+        }
+
+        #region Platform Anchor
+
+        /// <summary>
+        /// Called when the anchor is created or updated
+        /// </summary>
+        public UnityEvent AnchorUpdated = new UnityEvent();
+
+        /// <summary>
+        /// The current anchor component attached to the GameObject, if any
+        /// </summary>
+        public AnchorComponentType CurrentAnchor
+        {
+            get
+            {
+                return currentAnchor;
+            }
+            private set
+            {
+#if !UNITY_ANDROID
+                if (currentAnchor != value)
+                {
+                    currentAnchor = value;
+                    AnchorUpdated.Invoke();
+                }
+#endif
+            }
+        }
+
+        private AnchorComponentType currentAnchor = null;
+
+        /// <summary>
+        /// Creates a new anchor on the GameObject
+        /// </summary>
+        public void CreateAnchor()
+        {
+            if (CurrentAnchor != null)
+            {
+                Debug.Log("Object already has an anchor, ignoring CreateAnchor call");
+                return;
+            }
+
+            CurrentAnchor = gameObject.AddComponent<AnchorComponentType>();
+        }
+
+        #endregion Platform Anchor
+
+        #region Local Anchor
 
         /// <summary>
         /// Name of the anchor to save to the local store
         /// </summary>
         public string LocalIdentity { get => localIdentity; set => localIdentity = value; }
+
+        /// <summary>
+        /// Loads the anchor from the local anchor store
+        /// </summary>
+        public void LoadLocalAnchor()
+        {
+#if WINDOWS_UWP
+            MixedRealityToolkit.AnchorsSystem.RegisterForLocalAnchorsReadyCallback(() =>
+                CurrentAnchor = MixedRealityToolkit.AnchorsSystem.LocalAnchors.Load(localIdentity, gameObject));
+#elif !UNITY_EDITOR
+            Debug.LogWarning("Local anchors currently only supported on UWP.");
+#endif
+        }
+
+        /// <summary>
+        /// Saves the anchor to the local anchor store
+        /// </summary>
+        public void SaveLocalAnchor()
+        {
+#if WINDOWS_UWP
+            if (CurrentAnchor == null)
+            {
+                Debug.LogError("Cannot save a local anchor if a WorldAnchor hasn't been set");
+                return;
+            }
+
+            MixedRealityToolkit.AnchorsSystem.RegisterForLocalAnchorsReadyCallback(() =>
+                MixedRealityToolkit.AnchorsSystem.LocalAnchors.Save(localIdentity, CurrentAnchor));
+#elif !UNITY_EDITOR
+            Debug.LogWarning("Local anchors currently only supported on UWP.");
+#endif
+        }
+
+        #endregion Local Anchor
+
+        #region Azure Anchor
+
+        // TODO: Make a more generic query
+        private static readonly string AzureNameProperty = "PersistentAnchor_Name";
 
         /// <summary>
         /// Anchor name assigned in Azure Spatial Anchors for this anchor
@@ -129,99 +227,11 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         public bool AzureAutoUpdateLocal { get => azureAutoUpdateLocal; set => azureAutoUpdateLocal = value; }
 
         /// <summary>
-        /// Called when the anchor is created or updated
-        /// </summary>
-        public UnityEvent AnchorUpdated = new UnityEvent();
-
-        /// <summary>
-        /// The current anchor component attached to the GameObject, if any
-        /// </summary>
-        public AnchorComponentType CurrentAnchor
-        {
-            get
-            {
-                return currentAnchor;
-            }
-            private set
-            {
-#if !UNITY_ANDROID
-                if (currentAnchor != value)
-                {
-                    currentAnchor = value;
-                    AnchorUpdated.Invoke();
-                }
-#endif
-            }
-        }
-
-        private AnchorComponentType currentAnchor = null;
-
-        /// <summary>
-        /// Creates a new anchor on the GameObject
-        /// </summary>
-        public void CreateAnchor()
-        {
-            if (CurrentAnchor != null)
-            {
-                Debug.Log("Object already has an anchor, ignoring CreateAnchor call");
-                return;
-            }
-
-            CurrentAnchor = gameObject.AddComponent<AnchorComponentType>();
-        }
-
-        /// <summary>
-        /// Loads the anchor from the local anchor store
-        /// </summary>
-        public void LoadLocalAnchor()
-        {
-#if WINDOWS_UWP
-            MixedRealityToolkit.AnchorsSystem.RegisterForLocalAnchorsReadyCallback(() =>
-                CurrentAnchor = MixedRealityToolkit.AnchorsSystem.LocalAnchors.Load(localIdentity, gameObject));
-#elif !UNITY_EDITOR
-            Debug.LogWarning("Local anchors currently only supported on UWP.");
-#endif
-        }
-
-        /// <summary>
-        /// Saves the anchor to the local anchor store
-        /// </summary>
-        public void SaveLocalAnchor()
-        {
-#if WINDOWS_UWP
-            if (CurrentAnchor == null)
-            {
-                Debug.LogError("Cannot save a local anchor if a WorldAnchor hasn't been set");
-                return;
-            }
-
-            MixedRealityToolkit.AnchorsSystem.RegisterForLocalAnchorsReadyCallback(() =>
-                MixedRealityToolkit.AnchorsSystem.LocalAnchors.Save(localIdentity, CurrentAnchor));
-#elif !UNITY_EDITOR
-            Debug.LogWarning("Local anchors currently only supported on UWP.");
-#endif
-        }
-
-        /// <summary>
         /// Clears the cached Azure anchor data
         /// </summary>
         public void ClearCachedAzureAnchor()
         {
             AzureAnchorSource = null;
-        }
-
-        private void Awake()
-        {
-            CurrentAnchor = GetComponent<AnchorComponentType>();
-            AzureAnchorId = azureIdentity;
-            AzureAnchorProperties = new Dictionary<string, string>();
-            AzureAnchorName = azureName;
-            AzureAnchorSource = null;
-
-            if (localAutoLoad)
-            {
-                LoadLocalAnchor();
-            }
         }
 
         private bool CanMatchAzureAnchor()
@@ -267,5 +277,7 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
                 }
             }
         }
+
+        #endregion Azure Anchor
     }
 }
