@@ -53,7 +53,7 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         private void Awake()
         {
             CurrentAnchor = GetComponent<AnchorComponentType>();
-#if MRTK_USING_AZURESPATIALANCHORS
+#if MRTK_USING_AZURESPATIALANCHORS && !UNITY_EDITOR
             if (MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors != null)
             {
                 AzureAnchor = MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.GetNewAnchor();

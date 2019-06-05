@@ -32,6 +32,8 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         private SerializedProperty azureName;
         private SerializedProperty azureAutoUpdateLocal;
 
+        private SerializedProperty anchorUpdated;
+
         private static readonly GUIContent IdLabel = new GUIContent("ID");
         private static readonly GUIContent AutoLoadLabel = new GUIContent("Auto Load");
         private static readonly GUIContent NameLabel = new GUIContent("Name");
@@ -58,6 +60,7 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
             }
 
             azureAutoUpdateLocal = serializedObject.FindProperty("azureAutoUpdateLocal");
+            anchorUpdated = serializedObject.FindProperty("AnchorUpdated");
         }
 
         public sealed override void OnInspectorGUI()
@@ -83,6 +86,8 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
                     EditorGUILayout.PropertyField(azureAutoUpdateLocal, AutoUpdateLocalLabel);
                 }
             }
+
+            EditorGUILayout.PropertyField(anchorUpdated);
 
             serializedObject.ApplyModifiedProperties();
         }
