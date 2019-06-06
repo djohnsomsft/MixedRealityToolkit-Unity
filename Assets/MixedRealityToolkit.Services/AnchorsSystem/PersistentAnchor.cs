@@ -157,6 +157,16 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
 #endif
         }
 
+        public void DeleteLocalAnchor()
+        {
+#if WINDOWS_UWP
+            MixedRealityToolkit.AnchorsSystem.RegisterForLocalAnchorsReadyCallback(() =>
+                CurrentAnchor = MixedRealityToolkit.AnchorsSystem.LocalAnchors.Delete(localIdentity));
+#elif !UNITY_EDITOR
+            Debug.LogWarning("Local anchors currently only supported on UWP.");
+#endif
+        }
+
         #endregion Local Anchor
 
         #region Azure Anchor
@@ -200,6 +210,30 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
             if (MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors != null)
             {
                 MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.CommitAnchorAsync(gameObject);
+            }
+#endif
+        }
+
+        public void DeleteAzureAnchorAsync()
+        {
+#if MRTK_USING_AZURESPATIALANCHORS
+            if (MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors != null)
+            {
+                if (string.IsNullOrEmpty(AzureAnchor.Identifier))
+                {
+                    Debug.LogError("Cannot delete an anchor that has not been synced with the service");
+                    return;
+                }
+
+                // Copy the properties over but generate a new CloudSpatialAnchor to remove the ID
+                var newAnchor = MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.GetNewAnchor();
+                foreach (var prop in AzureAnchor.Properties)
+                {
+                    newAnchor.Properties.Add(prop.Key, prop.Value);
+                }
+
+                MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.DeleteAnchorAsync(AzureAnchor);
+                AzureAnchor = newAnchor;
             }
 #endif
         }

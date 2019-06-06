@@ -20,7 +20,7 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         /// <summary>
         /// Friendly name of the anchor
         /// </summary>
-        string Name { get; }
+        string Name { get; set; }
 
         /// <summary>
         /// Properties of the anchor

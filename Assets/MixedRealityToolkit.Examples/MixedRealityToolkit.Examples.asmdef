@@ -5,7 +5,8 @@
         "Microsoft.MixedReality.Toolkit.SDK",
         "Microsoft.MixedReality.Toolkit.Core.Utilities.Async",
         "Microsoft.MixedReality.Toolkit.Services.InputSystem",
-        "Microsoft.MixedReality.Toolkit.Services.AnchorsSystem"
+        "Microsoft.MixedReality.Toolkit.Services.AnchorsSystem",
+        "Unity.TextMeshPro"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [],

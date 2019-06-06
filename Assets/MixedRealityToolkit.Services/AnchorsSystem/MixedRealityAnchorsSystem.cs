@@ -84,6 +84,9 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         }
 
         /// <inheritdoc />
+        public bool LocalAnchorsEnabled => localAnchorStoreEnabled;
+
+        /// <inheritdoc />
         public WorldAnchorStore LocalAnchors { get; private set; }
 
         /// <inheritdoc />

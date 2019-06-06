@@ -12,6 +12,11 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
     public interface IMixedRealityAnchorsSystem : IMixedRealityEventSystem, IMixedRealityEventSource
     {
         /// <summary>
+        /// True if the local anchors store is enabled
+        /// </summary>
+        bool LocalAnchorsEnabled { get; }
+
+        /// <summary>
         /// Local anchors store provided through Unity
         /// </summary>
         WorldAnchorStore LocalAnchors { get; }
