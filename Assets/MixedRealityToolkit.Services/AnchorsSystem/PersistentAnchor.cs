@@ -175,8 +175,7 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         public void DeleteLocalAnchor()
         {
 #if WINDOWS_UWP
-            MixedRealityToolkit.AnchorsSystem.RegisterForLocalAnchorsReadyCallback(() =>
-                CurrentAnchor = MixedRealityToolkit.AnchorsSystem.LocalAnchors.Delete(localIdentity));
+            MixedRealityToolkit.AnchorsSystem.RegisterForLocalAnchorsReadyCallback(() => MixedRealityToolkit.AnchorsSystem.LocalAnchors.Delete(localIdentity));
 #elif !UNITY_EDITOR
             Debug.LogWarning("Local anchors currently only supported on UWP.");
 #endif

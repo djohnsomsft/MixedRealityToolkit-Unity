@@ -365,7 +365,7 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         }
 
         /// <inheritdoc />
-        bool IsSearchingForAnchors(int sessionId = -1)
+        public bool IsSearchingForAnchors(int sessionId = -1)
         {
             if (sessionId == BadSessionId)
             {
