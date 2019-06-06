@@ -15,7 +15,7 @@ using UnityEngine.XR.WSA;
 using AnchorComponentType = UnityEngine.XR.iOS.UnityARUserAnchorComponent;
 #elif WINDOWS_UWP
 using AnchorComponentType = UnityEngine.XR.WSA.WorldAnchor;
-#else // UNITY_ANDROID || UNITRY_EDITOR
+#else // UNITY_ANDROID || UNITY_EDITOR
 // TODO: Android not supported
 using AnchorComponentType = UnityEngine.Transform;
 #endif
@@ -116,9 +116,24 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
             CurrentAnchor = gameObject.AddComponent<AnchorComponentType>();
         }
 
-        #endregion Platform Anchor
+        /// <summary>
+        /// Removes the platform anchor, allowing the object to be moved.
+        /// </summary>
+        public void RemoveAnchor()
+        {
+            // TODO: Android currently not supported
+#if WINDOWS_UWP || UNITY_IOS
+            if (CurrentAnchor != null)
+            {
+                Component.DestroyImmediate(CurrentAnchor);
+                CurrentAnchor = null;
+            }
+#endif
+        }
 
-        #region Local Anchor
+#endregion Platform Anchor
+
+#region Local Anchor
 
         /// <summary>
         /// Name of the anchor to save to the local store
@@ -167,9 +182,9 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
 #endif
         }
 
-        #endregion Local Anchor
+#endregion Local Anchor
 
-        #region Azure Anchor
+#region Azure Anchor
 
         /// <summary>
         /// Anchor data for Azure Spatial Anchors anchor
@@ -177,19 +192,27 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         public IAzureAnchorData AzureAnchor
         {
             get => azureAnchor;
-            private set
+            set
             {
 #if MRTK_USING_AZURESPATIALANCHORS
-                if (azureAnchor != null && MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors != null)
+                if (azureAnchor != value)
                 {
-                    MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.AnchorLocated -= AzureSpatialAnchorsProvider_AnchorLocated;
-                }
+                    if (azureAnchor != null && MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors != null)
+                    {
+                        MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.AnchorLocated -= AzureSpatialAnchorsProvider_AnchorLocated;
+                    }
 
-                azureAnchor = value;
+                    azureAnchor = value;
 
-                if (azureAnchor != null && MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors != null)
-                {
-                    MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.AnchorLocated += AzureSpatialAnchorsProvider_AnchorLocated;
+                    if (azureAnchor != null && MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors != null)
+                    {
+                        MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.AnchorLocated += AzureSpatialAnchorsProvider_AnchorLocated;
+                        if (azureAnchor.Synced)
+                        {
+                            MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.UpdatePlatformAnchor(gameObject, azureAnchor);
+                            AnchorUpdated.Invoke();
+                        }
+                    }
                 }
 #endif
             }

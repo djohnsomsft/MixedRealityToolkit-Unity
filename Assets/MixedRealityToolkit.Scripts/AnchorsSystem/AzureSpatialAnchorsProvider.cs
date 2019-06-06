@@ -205,13 +205,6 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
 #elif UNITY_ANDROID
             Debug.LogError("Android not currently supported");
 #endif
-
-            // Fire the event for the anchor being updated
-            var persistentAnchorComponent = objectToUpdate.GetComponent<PersistentAnchor>();
-            if (persistentAnchorComponent != null)
-            {
-                persistentAnchorComponent.AnchorUpdated.Invoke();
-            }
         }
 
         /// <inheritdoc />
@@ -369,6 +362,19 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         {
             var watcher = cloudSession.CreateWatcher(locateCriteria);
             return watcher.Identifier;
+        }
+
+        /// <inheritdoc />
+        bool IsSearchingForAnchors(int sessionId = -1)
+        {
+            if (sessionId == BadSessionId)
+            {
+                return false;
+            }
+
+            var activeWatchers = cloudSession.GetActiveWatchers();
+
+            return (sessionId == -1 && activeWatchers.Any()) || (sessionId != -1 && activeWatchers.Any(w => w.Identifier == sessionId));
         }
 
         /// <inheritdoc />

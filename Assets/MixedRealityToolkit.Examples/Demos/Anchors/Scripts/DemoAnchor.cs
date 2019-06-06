@@ -15,6 +15,7 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos.Anchors
 {
     public class DemoAnchor : MonoBehaviour
     {
+        public GameObject prefab;
         public GameObject controls;
         public Renderer cubeRenderer;
         public Material plainMaterial;
@@ -30,10 +31,18 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos.Anchors
         public Renderer azureAutoUpdateButtonBack;
         public TextMeshPro azureAnchorName;
         public TextMeshPro azureAnchorStatus;
+        public GameObject azureDeleteButton;
+        public Renderer allowMoveButtonBack;
+        public GameObject searchLocalButton;
+        public GameObject searchAzureButton;
+        public TextMeshPro searchAzureButtonText;
 
         [HideInInspector]
         public PersistentAnchor anchor;
         private ManipulationHandler manipulationHandler;
+        private Interactable interactable;
+
+        private bool allowMove = false;
 
         private bool localAnchorsAvailable;
         private bool azureAnchorsAvailable;
@@ -127,12 +136,46 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos.Anchors
             AzureStatus = AzureAnchorState.Unsynced;
         }
 
+        public void ToggleAllowMove()
+        {
+            allowMove = !allowMove;
+            UpdateVisuals();
+        }
+
         public void OnAnchorUpdated()
         {
             if (LocalStatus == LocalAnchorState.Loading)
             {
                 LocalStatus = LocalAnchorState.Loaded;
             }
+        }
+
+        public void OnClick()
+        {
+            controls.SetActive(true);
+        }
+
+        public void OnManipulationStarted()
+        {
+            anchor.RemoveAnchor();
+
+            if (LocalStatus != LocalAnchorState.None && LocalStatus != LocalAnchorState.Unsynced)
+            {
+                LocalStatus = LocalAnchorState.Moved;
+            }
+
+            if (AzureStatus != AzureAnchorState.None && AzureStatus != AzureAnchorState.Unsynced)
+            {
+                AzureStatus = AzureAnchorState.Moved;
+            }
+
+            controls.SetActive(false);
+        }
+
+        public void OnManipulationEnded()
+        {
+            anchor.CreateAnchor();
+            controls.SetActive(true);
         }
 
         public void SearchForAllLocalAnchors()
@@ -150,15 +193,25 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos.Anchors
                     }
                     else
                     {
-                        // TODO: Create new demo anchor
+                        var newAnchorObject = GameObject.Instantiate(prefab);
+                        var newDemoAnchor = newAnchorObject.GetComponent<DemoAnchor>();
+                        newDemoAnchor.anchor.LocalIdentity = localAnchorId;
+                        newDemoAnchor.LoadLocalAnchor();
                     }
                 }
             });
         }
 
-        public void SearchForAllAzureAnchors()
+        public void ToggleSearchForAllAzureAnchors()
         {
-            MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.StartSearchingForAnchors();
+            if (MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.IsSearchingForAnchors())
+            {
+
+            }
+            else
+            {
+                MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.StopSearchingForAnchors();
+            }
         }
 
         public void StopSearchingForAzureAnchors()
@@ -172,6 +225,7 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos.Anchors
         {
             anchor = GetComponent<PersistentAnchor>();
             manipulationHandler = GetComponent<ManipulationHandler>();
+            interactable = GetComponent<Interactable>();
             localAnchorsAvailable = MixedRealityToolkit.AnchorsSystem != null && MixedRealityToolkit.AnchorsSystem.LocalAnchorsEnabled;
             azureAnchorsAvailable = MixedRealityToolkit.AnchorsSystem != null && MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors != null;
             if (azureAnchorsAvailable)
@@ -180,6 +234,8 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos.Anchors
                 MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.NewAnchorLocated += AzureSpatialAnchors_NewAnchorLocated;
                 MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.AnchorCommitCompleted += AzureSpatialAnchors_AnchorCommitCompleted;
             }
+            searchLocalButton.SetActive(localAnchorsAvailable);
+            searchAzureButton.SetActive(azureAnchorsAvailable);
             UpdateVisuals();
         }
 
@@ -202,7 +258,17 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos.Anchors
 
         private void AzureSpatialAnchors_NewAnchorLocated(AzureAnchorLocatedEventArgs args)
         {
-            // TODO: Create new demo anchor
+            if (args.Consumed)
+            {
+                return;
+            }
+
+            args.Consume();
+
+            var newAnchorObject = GameObject.Instantiate(prefab);
+            var newDemoAnchor = newAnchorObject.GetComponent<DemoAnchor>();
+            newDemoAnchor.anchor.AzureAnchor = args.Anchor;
+            newDemoAnchor.AzureStatus = AzureAnchorState.Synced;
         }
 
         private void AzureSpatialAnchors_AnchorCommitCompleted(AzureAnchorCommitCompletedEventArgs args)
@@ -259,6 +325,18 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos.Anchors
                 azureAnchorStatus.text = azureState.ToString();
             }
             azureAutoUpdateButtonBack.material = anchor.AzureAutoUpdateLocal ? completeMaterial : plainMaterial;
+            azureDeleteButton.SetActive(hasAzureIdentity && !string.IsNullOrEmpty(anchor.AzureAnchor.Identifier));
+
+            allowMoveButtonBack.material = allowMove ? completeMaterial : plainMaterial;
+            manipulationHandler.enabled = allowMove;
+            interactable.enabled = !allowMove;
+
+            if (azureAnchorsAvailable)
+            {
+                searchAzureButtonText.text = MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.IsSearchingForAnchors() ?
+                    "Stop Search" :
+                    "Search Azure";
+            }
         }
     }
 }

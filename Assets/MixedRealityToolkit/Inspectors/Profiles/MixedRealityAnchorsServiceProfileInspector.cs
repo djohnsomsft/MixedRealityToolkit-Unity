@@ -15,13 +15,15 @@ namespace Microsoft.MixedReality.Toolkit.Anchors.Editor
     {
         private static readonly GUIContent CreateAzureProvider = new GUIContent("+ Add Azure Spatial Anchors Provider", "Add Azure Spatial Anchors Provider");
 
+        private SerializedProperty enableLocalAnchorStore;
         private static bool showCloudAnchorsProviderProfile = true;
         private SerializedProperty cloudAnchorsProviderProfile;
 
         protected override void OnEnable()
         {
             base.OnEnable();
-            
+
+            enableLocalAnchorStore = serializedObject.FindProperty("enableLocalAnchorStore");
             cloudAnchorsProviderProfile = serializedObject.FindProperty("cloudAnchorsProviderProfile");
         }
 
@@ -47,6 +49,10 @@ namespace Microsoft.MixedReality.Toolkit.Anchors.Editor
             serializedObject.Update();
             EditorGUI.BeginChangeCheck();
             bool changed = false;
+
+            EditorGUILayout.Space();
+
+            EditorGUILayout.PropertyField(enableLocalAnchorStore);
 
             EditorGUILayout.Space();
             showCloudAnchorsProviderProfile = EditorGUILayout.Foldout(showCloudAnchorsProviderProfile, "Cloud Anchors Providers", true);

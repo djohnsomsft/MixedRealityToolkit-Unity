@@ -91,6 +91,13 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
             bool useRelationshipInformation = true);
 
         /// <summary>
+        /// Checks if currently searching for anchors
+        /// </summary>
+        /// <param name="sessionId">Session to check for, or -1 to check for any session</param>
+        /// <returns></returns>
+        bool IsSearchingForAnchors(int sessionId = -1);
+
+        /// <summary>
         /// Stops searching for anchors
         /// </summary>
         /// <param name="sessionId">Session to stop, or -1 to stop all sessions</param>
