@@ -24,18 +24,18 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos.Anchors
 
         public GameObject localAnchorUXOff;
         public GameObject localAnchorUXOn;
-        public TextMeshPro localAnchorName;
         public TextMeshPro localAnchorStatus;
         public GameObject azureAnchorUXOff;
         public GameObject azureAnchorUXOn;
         public Renderer azureAutoUpdateButtonBack;
-        public TextMeshPro azureAnchorName;
         public TextMeshPro azureAnchorStatus;
         public GameObject azureDeleteButton;
         public Renderer allowMoveButtonBack;
         public GameObject searchLocalButton;
         public GameObject searchAzureButton;
         public TextMeshPro searchAzureButtonText;
+        public GameObject textPopup;
+        public TextMeshPro textPopupText;
 
         [HideInInspector]
         public PersistentAnchor anchor;
@@ -43,6 +43,8 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos.Anchors
         private Interactable interactable;
 
         private bool allowMove = false;
+        private string localName;
+        private string azureName;
 
         private bool localAnchorsAvailable;
         private bool azureAnchorsAvailable;
@@ -54,6 +56,7 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos.Anchors
             Moved,
             Loading,
             Loaded,
+            Failed,
             Saved
         }
 
@@ -96,8 +99,8 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos.Anchors
 
         public void LoadLocalAnchor()
         {
-            anchor.LoadLocalAnchor();
             LocalStatus = LocalAnchorState.Loading;
+            anchor.LoadLocalAnchor();
         }
 
         public void SaveLocalAnchor()
@@ -120,8 +123,8 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos.Anchors
 
         public void SaveAzureAnchor()
         {
-            anchor.SaveAzureAnchorAsync();
             AzureStatus = AzureAnchorState.Committing;
+            anchor.SaveAzureAnchorAsync();
         }
 
         public void DeleteAzureAnchor()
@@ -140,6 +143,14 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos.Anchors
         {
             allowMove = !allowMove;
             UpdateVisuals();
+        }
+
+        public void OnAnchorUpdateFailed()
+        {
+            if (LocalStatus == LocalAnchorState.Loading)
+            {
+                LocalStatus = LocalAnchorState.Failed;
+            }
         }
 
         public void OnAnchorUpdated()
@@ -217,6 +228,29 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos.Anchors
         public void StopSearchingForAzureAnchors()
         {
             MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.StopSearchingForAnchors();
+        }
+
+        public void OnLocalNameFocus()
+        {
+            if (!string.IsNullOrEmpty(localName))
+            {
+                textPopup.SetActive(true);
+                textPopupText.text = localName;
+            }
+        }
+
+        public void OnAzureNameFocus()
+        {
+            if (!string.IsNullOrEmpty(azureName))
+            {
+                textPopup.SetActive(true);
+                textPopupText.text = azureName;
+            }
+        }
+
+        public void HidePopup()
+        {
+            textPopup.SetActive(false);
         }
 
         public bool ControlsVisible { get => controls.activeSelf; set => controls.SetActive(value); }
@@ -307,7 +341,7 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos.Anchors
             var hasLocalIdentity = !string.IsNullOrEmpty(anchor.LocalIdentity) && localAnchorsAvailable;
             localAnchorUXOff.SetActive(!hasLocalIdentity && localAnchorsAvailable);
             localAnchorUXOn.SetActive(hasLocalIdentity);
-            localAnchorName.text = localAnchorsAvailable ? anchor.LocalIdentity : string.Empty;
+            localName = localAnchorsAvailable ? anchor.LocalIdentity : string.Empty;
             if (hasLocalIdentity)
             {
                 localAnchorStatus.text = localState.ToString();
@@ -317,7 +351,7 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos.Anchors
                 (anchor.AzureAnchor.Synced || !string.IsNullOrEmpty(anchor.AzureAnchor.Identifier) || !string.IsNullOrEmpty(anchor.AzureAnchor.Name));
             azureAnchorUXOff.SetActive(!hasAzureIdentity && azureAnchorsAvailable);
             azureAnchorUXOn.SetActive(hasAzureIdentity);
-            azureAnchorName.text = hasAzureIdentity ?
+            azureName = hasAzureIdentity ?
                 ((string.IsNullOrEmpty(anchor.AzureAnchor.Name) ? anchor.AzureAnchor.Identifier : anchor.AzureAnchor.Name)) :
                 string.Empty;
             if (hasAzureIdentity)

@@ -74,6 +74,11 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         public UnityEvent AnchorUpdated = new UnityEvent();
 
         /// <summary>
+        /// Called when an attempt to update an anchor fails
+        /// </summary>
+        public UnityEvent AnchorUpdateFailed = new UnityEvent();
+
+        /// <summary>
         /// The current anchor component attached to the GameObject, if any
         /// </summary>
         public AnchorComponentType CurrentAnchor
@@ -91,11 +96,8 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
             private set
             {
 #if !UNITY_ANDROID
-                if (currentAnchor != value)
-                {
-                    currentAnchor = value;
-                    AnchorUpdated.Invoke();
-                }
+                currentAnchor = value;
+                AnchorUpdated.Invoke();
 #endif
             }
         }
@@ -147,7 +149,17 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         {
 #if WINDOWS_UWP
             MixedRealityToolkit.AnchorsSystem.RegisterForLocalAnchorsReadyCallback(() =>
-                CurrentAnchor = MixedRealityToolkit.AnchorsSystem.LocalAnchors.Load(localIdentity, gameObject));
+            {
+                var newAnchor = MixedRealityToolkit.AnchorsSystem.LocalAnchors.Load(localIdentity, gameObject);
+                if (newAnchor == null)
+                {
+                    AnchorUpdateFailed.Invoke();
+                }
+                else
+                {
+                    CurrentAnchor = newAnchor;
+                }
+            });
 #elif !UNITY_EDITOR
             Debug.LogWarning("Local anchors currently only supported on UWP.");
 #endif
@@ -293,6 +305,8 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
 
                     SaveLocalAnchor();
                 }
+
+                AnchorUpdated.Invoke();
             }
         }
 #endif
