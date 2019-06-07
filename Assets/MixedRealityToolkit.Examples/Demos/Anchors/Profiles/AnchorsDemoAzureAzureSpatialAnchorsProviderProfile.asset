@@ -15,5 +15,5 @@ MonoBehaviour:
   isCustomProfile: 1
   accountId: 
   accountKey: 
-  autoStart: 0
+  autoStart: 1
   verboseLogging: 1
