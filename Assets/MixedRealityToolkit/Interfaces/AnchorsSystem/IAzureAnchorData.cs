@@ -15,7 +15,7 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
         /// <summary>
         /// Identifier for the anchor
         /// </summary>
-        string Identifier { get;}
+        string Identifier { get; set; }
 
         /// <summary>
         /// Friendly name of the anchor

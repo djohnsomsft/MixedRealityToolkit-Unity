@@ -57,6 +57,14 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
             if (MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors != null)
             {
                 AzureAnchor = MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.GetNewAnchor();
+                if (!string.IsNullOrEmpty(azureIdentity))
+                {
+                    AzureAnchor.Identifier = azureIdentity;
+                }
+                if (!string.IsNullOrEmpty(azureName))
+                {
+                    AzureAnchor.Name = azureName;
+                }
             }
 #endif
 

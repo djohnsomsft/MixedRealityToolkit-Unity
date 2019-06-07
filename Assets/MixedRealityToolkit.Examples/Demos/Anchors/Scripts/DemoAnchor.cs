@@ -54,9 +54,9 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos.Anchors
             None,
             Unsynced,
             Moved,
+            Failed,
             Loading,
             Loaded,
-            Failed,
             Saved
         }
 
@@ -76,6 +76,7 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos.Anchors
             None,
             Unsynced,
             Moved,
+            Failed,
             Committing,
             Synced
         }
@@ -255,7 +256,7 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos.Anchors
 
         public bool ControlsVisible { get => controls.activeSelf; set => controls.SetActive(value); }
 
-        private void Awake()
+        private void Start()
         {
             anchor = GetComponent<PersistentAnchor>();
             manipulationHandler = GetComponent<ManipulationHandler>();
@@ -309,7 +310,7 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos.Anchors
         {
             if (args.Target == gameObject)
             {
-                AzureStatus = args.Succeeded ? AzureAnchorState.Synced : AzureAnchorState.Unsynced;
+                AzureStatus = args.Succeeded ? AzureAnchorState.Synced : AzureAnchorState.Failed;
             }
         }
 
