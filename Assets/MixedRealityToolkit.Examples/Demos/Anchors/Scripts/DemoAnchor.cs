@@ -218,17 +218,18 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos.Anchors
         {
             if (MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.IsSearchingForAnchors())
             {
-
+                MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.StopSearchingForAnchors();
             }
             else
             {
-                MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.StopSearchingForAnchors();
+                MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.StartSearchingForAnchors();
             }
-        }
 
-        public void StopSearchingForAzureAnchors()
-        {
-            MixedRealityToolkit.AnchorsSystem.AzureSpatialAnchors.StopSearchingForAnchors();
+            // Update all anchor buttons
+            foreach (var demoAnchor in FindAllDemoAnchors())
+            {
+                demoAnchor.UpdateVisuals();
+            }
         }
 
         public void OnLocalNameFocus()
@@ -357,7 +358,7 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos.Anchors
                 string.Empty;
             if (hasAzureIdentity)
             {
-                azureAnchorStatus.text = azureState.ToString();
+                azureAnchorStatus.text = AzureStatus.ToString();
             }
             azureAutoUpdateButtonBack.material = anchor.AzureAutoUpdateLocal ? completeMaterial : plainMaterial;
             azureDeleteButton.SetActive(hasAzureIdentity && !string.IsNullOrEmpty(anchor.AzureAnchor.Identifier));

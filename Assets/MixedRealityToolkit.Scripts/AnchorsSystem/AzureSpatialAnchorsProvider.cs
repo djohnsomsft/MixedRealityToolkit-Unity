@@ -228,31 +228,42 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
 
                 try
                 {
+                    if (persistentAnchor.AzureAnchor == null)
+                    {
+                        Log("GameObject did not have an existing AzureAnchor, creating a new one");
+                        persistentAnchor.AzureAnchor = new AzureAnchorData();
+                    }
+
                     CloudSpatialAnchor workingAnchor = ((AzureAnchorData)persistentAnchor.AzureAnchor).Source;
-                    if (workingAnchor == null && !persistentAnchor.AzureAnchor.Synced)
+   
+                    // TODO: Handle updating out-of-sync identifier anchors
+                    /*if (workingAnchor != null && !string.IsNullOrEmpty(workingAnchor.Identifier) && !persistentAnchor.AzureAnchor.Synced)
                     {
-                        workingAnchor = await cloudSession.GetAnchorPropertiesAsync(persistentAnchor.AzureAnchor.Identifier);
-                    }
-
-                    bool newAnchor = (workingAnchor == null);
-
-                    if (newAnchor)
-                    {
-                        workingAnchor = new CloudSpatialAnchor();
-                    }
+                        Log($"Anchor ID [{workingAnchor.Identifier}] is known, calling GetAnchorPropertiesAsync to refresh before syncing");
+                        var updatedAnchor = await cloudSession.GetAnchorPropertiesAsync(workingAnchor.Identifier);
+                        if (updatedAnchor != null)
+                        {
+                            Log("Anchor ID [{workingAnchor.Identifier}] was successfully updated");
+                            workingAnchor = updatedAnchor;
+                        }
+                        else
+                        {
+                            Log("Anchor ID [{workingAnchor.Identifier}] was not found, committing local version");
+                        }
+                    }*/
 
                     IntPtr anchorRawPointer = IntPtr.Zero;
 #if WINDOWS_UWP
-            anchorRawPointer = persistentAnchor.CurrentAnchor.GetNativeSpatialAnchorPtr();
+                    anchorRawPointer = persistentAnchor.CurrentAnchor.GetNativeSpatialAnchorPtr();
 #elif UNITY_IOS
-            anchorRawPointer = UnityARSessionNativeInterface.GetARSessionNativeInterface().GetArAnchorPointerForId(persistentAnchor.CurrentAnchor..AnchorId);
+                    anchorRawPointer = UnityARSessionNativeInterface.GetARSessionNativeInterface().GetArAnchorPointerForId(persistentAnchor.CurrentAnchor..AnchorId);
 #elif UNITY_ANDROID
-            Debug.LogError("Android currently not supported.");
+                    Debug.LogError("Android currently not supported.");
 #endif
 
                     if (anchorRawPointer == null)
                     {
-                        // TODO: Return error
+                        throw new InvalidOperationException("Failed to retrieve raw pointer for anchor");
                     }
 
                     workingAnchor.LocalAnchor = anchorRawPointer;
@@ -261,14 +272,17 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
                     {
                         workingAnchor.AppProperties.Add(prop.Key, prop.Value);
                     }
-
-                    if (newAnchor)
+                    if (string.IsNullOrEmpty(workingAnchor.Identifier))
                     {
+                        Log("Anchor is new, calling CreateAnchorAsync");
                         await cloudSession.CreateAnchorAsync(workingAnchor);
+                        Log($"CreateAnchorAsync succeeded creating anchor with ID [{workingAnchor.Identifier}]");
                     }
                     else
                     {
+                        Log($"Anchor ID [{workingAnchor.Identifier}] exists, calling UpdateAnchorPropertiesAsync");
                         await cloudSession.UpdateAnchorPropertiesAsync(workingAnchor);
+                        Log($"UpdateAnchorPropertiesAsync succeeded updating anchor with ID [{workingAnchor.Identifier}]");
                     }
 
                     result = new AzureAnchorCommitCompletedEventArgs(anchoredObject, persistentAnchor.AzureAnchor);
@@ -276,12 +290,14 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
                 // Exception while committing the CloudSpatialAnchor
                 catch (Exception e)
                 {
+                    Debug.LogException(e);
                     result = new AzureAnchorCommitCompletedEventArgs(anchoredObject, persistentAnchor.AzureAnchor, e);
                 }
             }
             // Exception before CloudSpatialAnchor was acquired
             catch (Exception e)
             {
+                Debug.LogException(e);
                 result = new AzureAnchorCommitCompletedEventArgs(anchoredObject, null, e);
             }
 
@@ -489,6 +505,14 @@ namespace Microsoft.MixedReality.Toolkit.Anchors
             return retval;
         }
 #endif
+
+        private void Log(string message)
+        {
+            if (VerboseLogging)
+            {
+                Debug.Log("[AzureSpatialAnchorsProvider] " + message);
+            }
+        }
     }
 }
 #endif
