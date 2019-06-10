@@ -19,6 +19,9 @@ namespace Microsoft.MixedReality.Toolkit.Anchors.Editor
         private static bool showCloudAnchorsProviderProfile = true;
         private SerializedProperty cloudAnchorsProviderProfile;
 
+        private const string ProfileTitle = "Anchors System Settings";
+        private const string ProfileDescription = "The Anchors System profile controls how world anchors are managed by the application.";
+
         protected override void OnEnable()
         {
             base.OnEnable();
@@ -29,70 +32,63 @@ namespace Microsoft.MixedReality.Toolkit.Anchors.Editor
 
         public override void OnInspectorGUI()
         {
-            RenderTitleDescriptionAndLogo(
-                "Anchors System Profile",
-                "The Anchors System Profile configures how world anchors are managed by the application.");
+            RenderProfileHeader(ProfileTitle, ProfileDescription, target);
 
-            if (MixedRealityInspectorUtility.CheckMixedRealityConfigured(true, !RenderAsSubProfile))
-            {
-                if (DrawBacktrackProfileButton("Back to Configuration Profile", MixedRealityToolkit.Instance.ActiveProfile))
-                {
-                    return;
-                }
-            }
-
-            CheckProfileLock(target);
-
-            var previousLabelWidth = EditorGUIUtility.labelWidth;
-            EditorGUIUtility.labelWidth = 160f;
-
-            serializedObject.Update();
-            EditorGUI.BeginChangeCheck();
             bool changed = false;
-
-            EditorGUILayout.Space();
-
-            EditorGUILayout.PropertyField(enableLocalAnchorStore);
-
-            EditorGUILayout.Space();
-            showCloudAnchorsProviderProfile = EditorGUILayout.Foldout(showCloudAnchorsProviderProfile, "Cloud Anchors Providers", true);
-            if (showCloudAnchorsProviderProfile)
+            using (new GUIEnabledWrapper(!IsProfileLock((BaseMixedRealityProfile)target)))
             {
-                using (new EditorGUI.IndentLevelScope())
+                serializedObject.Update();
+                EditorGUI.BeginChangeCheck();
+
+                EditorGUILayout.Space();
+
+                EditorGUILayout.PropertyField(enableLocalAnchorStore);
+
+                EditorGUILayout.Space();
+
+                showCloudAnchorsProviderProfile = EditorGUILayout.Foldout(showCloudAnchorsProviderProfile, "Cloud Anchors Providers", true);
+                if (showCloudAnchorsProviderProfile)
                 {
-                    if (cloudAnchorsProviderProfile.objectReferenceValue != null)
+                    using (new EditorGUI.IndentLevelScope())
                     {
-                        changed |= RenderProfile(cloudAnchorsProviderProfile);
-                    }
-                    else
-                    {
-                        if (GUILayout.Button(CreateAzureProvider, EditorStyles.miniButton))
+                        if (cloudAnchorsProviderProfile.objectReferenceValue != null)
                         {
-                            ScriptableObject instance = CreateInstance<AzureSpatialAnchorsProviderProfile>();
-                            var newProfile = instance.CreateAsset(AssetDatabase.GetAssetPath(Selection.activeObject)) as BaseMixedRealityProfile;
-                            cloudAnchorsProviderProfile.objectReferenceValue = newProfile;
-                            cloudAnchorsProviderProfile.serializedObject.ApplyModifiedProperties();
-                            changed = true;
+                            changed |= RenderProfile(cloudAnchorsProviderProfile, typeof(AzureSpatialAnchorsProviderProfile), false);
+                        }
+                        else
+                        {
+                            if (GUILayout.Button(CreateAzureProvider, EditorStyles.miniButton))
+                            {
+                                ScriptableObject instance = CreateInstance<AzureSpatialAnchorsProviderProfile>();
+                                var newProfile = instance.CreateAsset(AssetDatabase.GetAssetPath(Selection.activeObject)) as BaseMixedRealityProfile;
+                                cloudAnchorsProviderProfile.objectReferenceValue = newProfile;
+                                cloudAnchorsProviderProfile.serializedObject.ApplyModifiedProperties();
+                                changed = true;
+                            }
                         }
                     }
                 }
-            }
 
-            if (!changed)
-            {
-                changed |= EditorGUI.EndChangeCheck();
-            }
+                if (!changed)
+                {
+                    changed |= EditorGUI.EndChangeCheck();
+                }
+                
+                serializedObject.ApplyModifiedProperties();
 
-            EditorGUIUtility.labelWidth = previousLabelWidth;
-            serializedObject.ApplyModifiedProperties();
-
-            if (MixedRealityToolkit.IsInitialized)
-            {
-                if (changed)
+                if (changed && MixedRealityToolkit.IsInitialized)
                 {
                     EditorApplication.delayCall += () => MixedRealityToolkit.Instance.ResetConfiguration(MixedRealityToolkit.Instance.ActiveProfile);
                 }
             }
+        }
+
+        protected override bool IsProfileInActiveInstance()
+        {
+            var profile = target as BaseMixedRealityProfile;
+            return MixedRealityToolkit.IsInitialized && profile != null &&
+                   MixedRealityToolkit.Instance.HasActiveProfile &&
+                   profile == MixedRealityToolkit.Instance.ActiveProfile.AnchorsSystemProfile;
         }
     }
 }

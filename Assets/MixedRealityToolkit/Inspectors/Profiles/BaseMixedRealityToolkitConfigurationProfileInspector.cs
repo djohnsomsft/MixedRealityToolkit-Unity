@@ -36,6 +36,7 @@ namespace Microsoft.MixedReality.Toolkit.Editor
             Configuration,
             Input,
             SpatialAwareness,
+            Anchors,
             RegisteredServices
         };
 
@@ -136,6 +137,9 @@ namespace Microsoft.MixedReality.Toolkit.Editor
                     break;
                 case BackProfileType.SpatialAwareness:
                     backProfile = MixedRealityToolkit.Instance.ActiveProfile.SpatialAwarenessSystemProfile;
+                    break;
+                case BackProfileType.Anchors:
+                    backProfile = MixedRealityToolkit.Instance.ActiveProfile.AnchorsSystemProfile;
                     break;
                 case BackProfileType.RegisteredServices:
                     backProfile = MixedRealityToolkit.Instance.ActiveProfile.RegisteredServiceProvidersProfile;

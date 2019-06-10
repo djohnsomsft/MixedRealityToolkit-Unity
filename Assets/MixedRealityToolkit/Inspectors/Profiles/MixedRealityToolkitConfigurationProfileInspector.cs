@@ -42,7 +42,6 @@ namespace Microsoft.MixedReality.Toolkit.Editor
         private SerializedProperty spatialAwarenessSystemType;
         private SerializedProperty spatialAwarenessSystemProfile;
         // Anchors system properties
-        private static bool showAnchorsProperties = true;
         private SerializedProperty enableAnchorsSystem;
         private SerializedProperty anchorsSystemType;
         private SerializedProperty anchorsSystemProfile;

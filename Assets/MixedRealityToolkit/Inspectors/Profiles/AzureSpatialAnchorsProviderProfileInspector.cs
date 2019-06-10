@@ -27,6 +27,9 @@ namespace Microsoft.MixedReality.Toolkit.Anchors.Editor
         private SerializedProperty autoStart;
         private SerializedProperty verboseLogging;
 
+        private static readonly string ProfileTitle = "Azure Spatial Anchors Provider Settings";
+        private static readonly string ProfileDescription = "The Azure Spatial Anchors Provider profile configures your integration with an Azure Spatial Anchors service.";
+
         protected override void OnEnable()
         {
             base.OnEnable();
@@ -39,82 +42,75 @@ namespace Microsoft.MixedReality.Toolkit.Anchors.Editor
 
         public override void OnInspectorGUI()
         {
-            RenderTitleDescriptionAndLogo(
-                    "Azure Spatial Anchors Provider Profile",
-                    "The Azure Spatial Anchors Provider Profile configures your integration with an Azure Spatial Anchors service.");
+            RenderProfileHeader(ProfileTitle, ProfileDescription, target, true, BackProfileType.Anchors);
 
-            if (MixedRealityInspectorUtility.CheckMixedRealityConfigured(true, !RenderAsSubProfile))
+            using (new GUIEnabledWrapper(!IsProfileLock((BaseMixedRealityProfile)target)))
             {
-                if (DrawBacktrackProfileButton("Back to Anchors Service Profile", MixedRealityToolkit.Instance.ActiveProfile.AnchorsSystemProfile))
+                serializedObject.Update();
+                EditorGUI.BeginChangeCheck();
+                bool changed = false;
+
+                EditorGUILayout.Space();
+
+                // TODO: Better way to check if ASA plugin is present in the project
+                if (!AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetTypes()).Any(t => t.Namespace == "Microsoft.Azure.SpatialAnchors"))
                 {
+                    EditorGUILayout.HelpBox("Your project does not currently have the Azure Spatial Anchors SDK included.", MessageType.Info);
+                    if (GUILayout.Button("Click here to get started"))
+                    {
+                        Application.OpenURL("https://docs.microsoft.com/en-us/azure/spatial-anchors/quickstarts/get-started-unity-hololens");
+                    }
                     return;
                 }
-            }
 
-            CheckProfileLock(target);
+                if (!IsBuildingWithAzureSpatialAnchors())
+                {
+                    EditorGUILayout.HelpBox($"You must define {AzureSpatialAnchorsDefine} to turn on Azure Spatial Anchors functionality.", MessageType.Info);
+                    if (GUILayout.Button("Click here to set it"))
+                    {
+                        SetBuildWithAzureSpatialAnchors();
+                    }
+                    return;
+                }
+                else
+                {
+                    if (GUILayout.Button("Remove Azure Spatial Anchors from build"))
+                    {
+                        UnsetBuildWithAzureSpatialAnchors();
+                    }
+                }
 
-            var previousLabelWidth = EditorGUIUtility.labelWidth;
-            EditorGUIUtility.labelWidth = 160f;
-
-            serializedObject.Update();
-            EditorGUI.BeginChangeCheck();
-            bool changed = false;
-
-            EditorGUILayout.Space();
-
-            // TODO: Better way to check if ASA plugin is present in the project
-            if (!AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetTypes()).Any(t => t.Namespace == "Microsoft.Azure.SpatialAnchors"))
-            {
-                EditorGUILayout.HelpBox("Your project does not currently have the Azure Spatial Anchors SDK included.", MessageType.Info);
-                if (GUILayout.Button("Click here to get started"))
+                if (GUILayout.Button("Click for help getting started"))
                 {
                     Application.OpenURL("https://docs.microsoft.com/en-us/azure/spatial-anchors/quickstarts/get-started-unity-hololens");
                 }
-                return;
-            }
 
-            if (!IsBuildingWithAzureSpatialAnchors())
-            {
-                EditorGUILayout.HelpBox($"You must define {AzureSpatialAnchorsDefine} to turn on Azure Spatial Anchors functionality.", MessageType.Info);
-                if (GUILayout.Button("Click here to set it"))
+                EditorGUILayout.PropertyField(accountId);
+                EditorGUILayout.PropertyField(accountKey);
+                EditorGUILayout.PropertyField(autoStart);
+                EditorGUILayout.PropertyField(verboseLogging);
+
+                if (!changed)
                 {
-                    SetBuildWithAzureSpatialAnchors();
+                    changed |= EditorGUI.EndChangeCheck();
                 }
-                return;
-            }
-            else
-            {
-                if (GUILayout.Button("Remove Azure Spatial Anchors from build"))
-                {
-                    UnsetBuildWithAzureSpatialAnchors();
-                }
-            }
+                
+                serializedObject.ApplyModifiedProperties();
 
-            if (GUILayout.Button("Click for help getting started"))
-            {
-                Application.OpenURL("https://docs.microsoft.com/en-us/azure/spatial-anchors/quickstarts/get-started-unity-hololens");
-            }
-
-            EditorGUILayout.PropertyField(accountId);
-            EditorGUILayout.PropertyField(accountKey);
-            EditorGUILayout.PropertyField(autoStart);
-            EditorGUILayout.PropertyField(verboseLogging);
-
-            if (!changed)
-            {
-                changed |= EditorGUI.EndChangeCheck();
-            }
-
-            EditorGUIUtility.labelWidth = previousLabelWidth;
-            serializedObject.ApplyModifiedProperties();
-
-            if (MixedRealityToolkit.IsInitialized)
-            {
-                if (changed)
+                if (changed && MixedRealityToolkit.IsInitialized)
                 {
                     EditorApplication.delayCall += () => MixedRealityToolkit.Instance.ResetConfiguration(MixedRealityToolkit.Instance.ActiveProfile);
                 }
             }
+        }
+
+        protected override bool IsProfileInActiveInstance()
+        {
+            var profile = target as BaseMixedRealityProfile;
+            return MixedRealityToolkit.IsInitialized && profile != null &&
+                   MixedRealityToolkit.Instance.HasActiveProfile &&
+                   MixedRealityToolkit.Instance.ActiveProfile.AnchorsSystemProfile != null &&
+                   profile == MixedRealityToolkit.Instance.ActiveProfile.AnchorsSystemProfile.cloudAnchorsProviderProfile;
         }
 
         private bool IsBuildingWithAzureSpatialAnchors()
