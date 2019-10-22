@@ -1,151 +1,86 @@
 # Mixed Reality Toolkit Packages
 
-The Mixed Reality Toolkit (MRTK) is a collection of packages that enable cross platform Mixed Reality application development by providing support for Mixed Reality hardware and platforms in a componentized manner.
+The Mixed Reality Toolkit (MRTK) is a collection of packages that enable cross platform Mixed Reality application development by providing support for Mixed Reality hardware and platforms.
 
-There are three categories of MRTK packages: 
+The MRTK ships via the following Unity packages:
 
-- [Foundation](#foundation-packages)
-- [Extension](#extension-packages)
-- [Experimental](#experimental-packages)
+- [Foundation](#foundation-package)
+- [Extensions](#extensions-package)
+- [Examples](#examples-package)
+- [Tools](#tools-package)
 
-## Foundation Packages
+These packages are released and supported by Microsoft from source code in the [mrtk_release](https://github.com/Microsoft/MixedRealityToolkit-Unity/tree/mrtk_release) branch on GitHub.
 
-The Mixed Reality Toolkit Foundation is the set of packages that enable your application to leverage common functionality across Mixed Reality Platforms. These packages are released and supported by Microsoft from source code in the [mrtk_release](https://github.com/Microsoft/MixedRealityToolkit-Unity/tree/mrtk_release) branch on GitHub.
+## Foundation Package
 
-![MRTK Foundation Packages](../../Documentation/Images/Packaging/MRTKFoundation.png)
+The Mixed Reality Toolkit Foundation is the set of code that enable your application to leverage common functionality across Mixed Reality Platforms.
 
+<img src="../../Documentation/Images/Input/MRTK_Package_Foundation.png" width="350px" style="display:block;"><br/>
+<sup>MRTK Foundation Package</sup>
 
 The MRTK Foundation is comprised of:
 
-- [Core Package](#core-package)
-- [Platform Providers](#platform-providers)
-- [System Services](#system-services)
-- [Feature Assets](#feature-assets)
+* **Core Package**
 
-The following sections describe the types of packages in each category.
+The Core Package contains the definitions for all of the common interfaces, classes and data types that are used by all other components. It is highly recommended that applications access MRTK components exclusively through the defined interfaces to enable the highest level of compatibility across platforms.
 
-### Core Package
-
-The core package is a _required_ component and is taken as a dependency by all MRTK foundation packages.
-
-The MRTK Core package includes:
-
-- [Common interfaces, classes and data types](#common-types)
-- [MixedRealityToolkit scene component](#mixedrealitytoolkit-scene-component)
-- [MRTK Standard Shader](#mrtk-standard-shader)
-- [Unity Input Provider](#unity-input-provider)
-- [Package Management](#package-management)
-
-#### Common types
-
-The Mixed Reality Toolkit Core package contains the definitions for all of the common interfaces, classes and data types that are used by all other components. It is highly recommended that applications access MRTK components exclusively through the defined interfaces to enable the highest level of compatibility across platforms.
-
-#### MixedRealityToolkit scene component
-
-The MixedRealityToolkit scene component is the single, centralized resource manager for the Mixed Reality Toolkit. This component loads and manages the lifespan of the platform and service modules and provides resources for the systems to access their configuration settings. 
-
-#### MRTK Standard Shader
-
-The MRTK Standard Shader provides the basis for virtually all of the materials provided by the MRTK. This shader is extremely flexible and optimized for the variety of platforms on which MRTK is supported. It is _highly_ recommended that your application's materials use the MRTK standard shader for optimal performance.
-
-#### Unity Input Provider
-
-The Unity Input Provider provides access to common input devices such as game controllers, touch screens and a 3D spatial mouse.
-
-#### Package Management
-
-_Coming soon_
-
-The Mixed Reality Toolkit Core package provides support for discovering and managing the optional foundation, extension and experimental MRTK packages.
-
-### Platform Providers
+* **Platform Providers**
 
 The MRTK Platform Provider packages are the components that enable the Mixed Reality Toolkit to target Mixed Reality hardware and platform functionality.
 
 Supported platforms include:
 
-- [Windows Mixed Reality](#windows-mixed-reality)
-- [OpenVR](#openvr)
-- [Windows Voice](#windows-voice)
+- Windows Mixed Reality
+- OpenVR
+- Windows Voice
 
-#### Windows Mixed Reality
+* **System Services**
 
-The Windows Mixed Reality package provides support for Microsoft HoloLens, HoloLens 2 and Windows Mixed Reality Immersive devices. The package contains full platform support, including:
-
-- Articulated Hands
-- Eye Tracking
-- Gaze targeting
-- Gestures
-- Spatial Mapping
-- Windows Mixed Reality Motion controllers
-
-#### OpenVR
-
-The OpenVR package provides hardware and platform support for devices using the OpenVR platform.
-
-#### Windows Voice
-
-The Windows Voice package provides support for keyword recognition and dictation functionality on Microsoft Windows 10 devices.
-
-### System Services
-
-Core platform services are provided in system service packages. These packages contain the Mixed Reality Toolkit's default implementations of the system service interfaces, defined in the [core](#core-package) package.
+Core services provide the default implementations for the system service interfaces, defined in the core package.
 
 The MRTK foundation includes the following system services:
 
-- [Boundary System](#boundary-system)
-- [Diagnostic System](#diagnostic-system)
-- [Input System](#input-system)
-- [Spatial Awareness System](#spatial-awareness-system)
-- [Teleport System](#teleport-system)
+- [Boundary System](../Boundary/BoundarySystemGettingStarted.md)
+- [Diagnostic System](../Diagnostics/DiagnosticsSystemGettingStarted.md)
+- [Input System](../Input/Overview.md)
+- [Spatial Awareness System](../SpatialAwareness/SpatialAwarenessGettingStarted.md)
+- [Teleport System](../TeleportSystem/Overview.md)
 
-#### Boundary System
+* **Feature Assets**
 
-The MRTK Boundary System provides data about the to virtual reality playspace. On systems for which the user has configured the boundary, the system can provide a floor plane, rectangular playspace, tracked area, and more.
+Feature Assets are collections of related functionality delivered as Unity assets and scripts including user interface controls, Standard assets, and more.
 
-#### Diagnostic System
+## Extensions Package
 
-The MRTK Diagnostic System provides real-time performance data within your application experience. At a glace, you will be able to view frame rate, processor time and other key performance metrics as you use your application.
+The extensions package contains additional services and components that extend the functionality of the foundation package.
 
-#### Input System
+- [Scene Transition Service](../Extensions/SceneTransitionService/SceneTransitionServiceOverview.md)
 
-The MRTK Input Systems enables applications to access input in a cross platform manner by specifying user actions and assigning those actions to the most appropriate buttons and axes on target controllers.
+## Examples Package
 
-#### Spatial Awareness System
+The examples package contains demos, sample scripts, and sample scenes that exercise functionality in the foundation package. This package contains the [HandInteractionExample scene](../README_HandInteractionExamples.md) (pictured below) which contains sample objects
+that respond to various types of hand input (articulated and non-articulated).
 
-The MRTK Spatial Awareness System enables access to real-world environmental data from devices such as the Microsoft HoloLens.
+![HandInteractionExample scene](../Images/MRTK_Examples.png)
 
-#### Teleport System
+This package also contains eye tracking demos, which are [documented here](../EyeTracking/EyeTracking_ExamplesOverview.md)
 
-The MRTK Teleport System provides virtual reality locomotion support.
+More generally, any new feature in the MRTK should contain a corresponding example in the examples package, roughly following
+the same folder structure and location.
 
-### Feature Assets
+## Tools Package
 
-Feature Assets are collections of related functionality delivered as Unity assets and scripts. Some of these features include:
+The tools package contains tools that are useful for creating mixed reality experiences whose code will ultimately not
+ship as part of an application.
 
-- User Interface Controls
-- Standard Assets
-- more
+- [Dependency Window](../Tools/DependencyWindow.md)
+- [Extension Service Creation Wizard](../Tools/ExtensionServiceCreationWizard.md)
+- [Optimize Window](../Tools/OptimizeWindow.md)
+- [Screenshot Utility](../Tools/ScreenshotUtility.md)
 
-## Extension Packages
+## See Also
 
-MRTK Extension packages are a collection of packages written by Microsoft and the Community that extend and enhance the functionality of the Mixed Reality Toolkit. Extension authors will state any required dependencies, mark the package as compatible with the Mixed Reality Toolkit and provide licensing and support statements.
+- [Architecture Overview](../Architecture/Overview.md)
+- [Systems, Extension Services and Data Providers](../Architecture/SystemsExtensionsProviders.md)
 
-Extension packages may provide new features and new platform support. Over time, extensions may, with the assistance and approval of the authors, be migrated into the MRTK Foundation at which time they will be released and supported by Microsoft.
 
-![MRTK Extension Package](../../Documentation/Images/Packaging/MRTKExtensions.png)
-
-## Experimental Packages
-
-Experimental packages provide the ability to flight prototype features, pre-releases and exciting new ideas. The goal of most experimental packages is to try something new and to gauge customer interest. Many, though not all, experimental packages will be re-released as extensions once the prototyping and testing phase completes.
-
-![MRTK Experimental Packages](../../Documentation/Images/Packaging/MRTKExperimental.png)
-
-## Conclusion
-
-The Mixed Reality Toolkit packages and package management system are designed to enable a clean and simple method for you to additively build features into your experiences without requiring unnecessary components to be included into the project.
-
-## See also
-
-- [Downloading MRTK](../DownloadingTheMRTK.md)
-- [Getting Started](../GettingStartedWithTheMRTK.md)

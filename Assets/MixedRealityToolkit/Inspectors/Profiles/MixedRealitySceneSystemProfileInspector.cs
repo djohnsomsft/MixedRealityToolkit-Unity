@@ -29,6 +29,7 @@ namespace Microsoft.MixedReality.Toolkit.Editor
             "Content scenes are everything else. You can load and unload any number of content scenes in any combination, and their content is unrestricted.";
 
         private static bool showEditorProperties = true;
+        private const string ShowSceneSystem_Editor_PreferenceKey = "ShowSceneSystem_Editor_PreferenceKey";
         private SerializedProperty editorManageBuildSettings;
         private SerializedProperty editorManageLoadedScenes;
         private SerializedProperty editorEnforceSceneOrder;
@@ -36,13 +37,16 @@ namespace Microsoft.MixedReality.Toolkit.Editor
         private SerializedProperty permittedLightingSceneComponentTypes;
 
         private static bool showManagerProperties = true;
+        private const string ShowSceneSystem_Manager_PreferenceKey = "ShowSceneSystem_Manager_PreferenceKey";
         private SerializedProperty useManagerScene;
         private SerializedProperty managerScene;
 
         private static bool showContentProperties = true;
+        private const string ShowSceneSystem_Content_PreferenceKey = "ShowSceneSystem_Content_PreferenceKey";
         private SerializedProperty contentScenes;
 
         private static bool showLightingProperties = true;
+        private const string ShowSceneSystem_Lighting_PreferenceKey = "ShowSceneSystem_Lighting_PreferenceKey";
         private SerializedProperty useLightingScene;
         private SerializedProperty defaultLightingSceneIndex;
         private SerializedProperty lightingScenes;
@@ -83,7 +87,10 @@ namespace Microsoft.MixedReality.Toolkit.Editor
                 return;
             }
             
-            RenderProfileHeader(ProfileTitle, ProfileDescription, target);
+            if (!RenderProfileHeader(ProfileTitle, ProfileDescription, target))
+            {
+                return;
+            }
 
             MixedRealityInspectorUtility.CheckMixedRealityConfigured(true);
 
@@ -109,7 +116,7 @@ namespace Microsoft.MixedReality.Toolkit.Editor
                         EditorGUIUtility.labelWidth = 0;
                     }
                 }
-            });
+            }, ShowSceneSystem_Editor_PreferenceKey);
 
             RenderFoldout(ref showManagerProperties, "Manager Scene Settings", () =>
             {
@@ -140,7 +147,7 @@ namespace Microsoft.MixedReality.Toolkit.Editor
                         EditorGUILayout.PropertyField(managerScene, includeChildren: true);
                     }
                 }
-            });
+            }, ShowSceneSystem_Manager_PreferenceKey);
 
             RenderFoldout(ref showLightingProperties, "Lighting Scene Settings", () =>
             {
@@ -189,7 +196,7 @@ namespace Microsoft.MixedReality.Toolkit.Editor
                             {
                                 EditorGUILayout.HelpBox("Your cached lighting settings may be out of date. This could result in unexpected appearances at runtime.", MessageType.Warning);
                             }
-                            if (MixedRealityEditorUtility.RenderIndentedButton(new GUIContent("Update Cached Lighting Settings"), EditorStyles.miniButton))
+                            if (InspectorUIUtility.RenderIndentedButton(new GUIContent("Update Cached Lighting Settings"), EditorStyles.miniButton))
                             {
                                 profile.EditorLightingCacheUpdateRequested = true;
                             }
@@ -197,7 +204,7 @@ namespace Microsoft.MixedReality.Toolkit.Editor
                         EditorGUILayout.Space();
                     }
                 }
-            });
+            }, ShowSceneSystem_Lighting_PreferenceKey);
 
             RenderFoldout(ref showContentProperties, "Content Scene Settings", () =>
             {
@@ -210,9 +217,12 @@ namespace Microsoft.MixedReality.Toolkit.Editor
                     EditorGUILayout.PropertyField(contentScenes, includeChildren: true);
                     //DrawSceneInfoDragAndDrop(contentScenes);
                 }
-            });
+            }, ShowSceneSystem_Content_PreferenceKey);
 
             serializedObject.ApplyModifiedProperties();
+
+            // Keep this inspector perpetually refreshed
+            EditorUtility.SetDirty(target);
         }
 
         protected override bool IsProfileInActiveInstance()
@@ -225,7 +235,6 @@ namespace Microsoft.MixedReality.Toolkit.Editor
         /// <summary>
         /// Used to drag-drop scene objects into scene lists. (Currently unused.)
         /// </summary>
-        /// <param name="arrayProperty"></param>
         private void DrawSceneInfoDragAndDrop(SerializedProperty arrayProperty)
         {
             if (!Application.isPlaying)

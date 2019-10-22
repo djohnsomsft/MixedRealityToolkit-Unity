@@ -21,7 +21,7 @@ namespace Microsoft.MixedReality.Toolkit.WindowsMixedReality.Input
         SupportedPlatforms.WindowsUniversal,
         "Windows Mixed Reality Eye Gaze Provider",
         "Profiles/DefaultMixedRealityEyeTrackingProfile.asset", "MixedRealityToolkit.SDK")]
-    public class WindowsMixedRealityEyeGazeDataProvider : BaseInputDeviceManager, IMixedRealityEyeGazeDataProvider, IMixedRealityEyeSaccadeProvider
+    public class WindowsMixedRealityEyeGazeDataProvider : BaseInputDeviceManager, IMixedRealityEyeGazeDataProvider, IMixedRealityEyeSaccadeProvider, IMixedRealityCapabilityCheck
     {
         /// <summary>
         /// Constructor.
@@ -51,16 +51,42 @@ namespace Microsoft.MixedReality.Toolkit.WindowsMixedReality.Input
         private Ray saccade_initialGazePoint;
         private List<Ray> saccade_newGazeCluster = new List<Ray>();
 
-#if WINDOWS_UWP
-        private static bool askedForETAccessAlready = false; // To make sure that this is only triggered once.
-#endif
-
         public event Action OnSaccade;
         public event Action OnSaccadeX;
         public event Action OnSaccadeY;
 
+#if WINDOWS_UWP
+
+        private static bool askedForETAccessAlready = false; // To make sure that this is only triggered once.
+
+#endif // WINDOWS_UWP
+
+        #region IMixedRealityCapabilityCheck Implementation
+        
+        /// <inheritdoc />
+        public bool CheckCapability(MixedRealityCapability capability)
+        {
+            if (WindowsApiChecker.UniversalApiContractV8_IsAvailable)
+            {
+#if WINDOWS_UWP
+                return (capability == MixedRealityCapability.EyeTracking) && EyesPose.IsSupported();
+#endif // WINDOWS_UWP
+            }
+
+            return false;
+        }
+
+        #endregion IMixedRealityCapabilityCheck Implementation
+
+        /// <inheritdoc />
         public override void Initialize()
         {
+#if UNITY_EDITOR && UNITY_WSA && UNITY_2019_3_OR_NEWER
+            Toolkit.Utilities.Editor.UWPCapabilityUtility.RequireCapability(
+                    UnityEditor.PlayerSettings.WSACapability.GazeInput,
+                    this.GetType());
+#endif
+
             if (Application.isPlaying && WindowsApiChecker.UniversalApiContractV8_IsAvailable)
             {
 #if WINDOWS_UWP
@@ -70,6 +96,7 @@ namespace Microsoft.MixedReality.Toolkit.WindowsMixedReality.Input
             }
         }
 
+        /// <inheritdoc />
         public override void Update()
         {
 #if WINDOWS_UWP
@@ -82,16 +109,21 @@ namespace Microsoft.MixedReality.Toolkit.WindowsMixedReality.Input
             if (pointerPose != null)
             {
                 var eyes = pointerPose.Eyes;
-                if ((eyes != null) && (eyes.Gaze.HasValue))
+                if (eyes != null)
                 {
-                    Ray newGaze = new Ray(WindowsMixedRealityUtilities.SystemVector3ToUnity(eyes.Gaze.Value.Origin), WindowsMixedRealityUtilities.SystemVector3ToUnity(eyes.Gaze.Value.Direction));
+                    InputSystem?.EyeGazeProvider?.UpdateEyeTrackingStatus(this, eyes.IsCalibrationValid);
 
-                    if (SmoothEyeTracking)
+                    if(eyes.Gaze.HasValue)
                     {
-                        newGaze = SmoothGaze(newGaze);
-                    }
+                        Ray newGaze = new Ray(WindowsMixedRealityUtilities.SystemVector3ToUnity(eyes.Gaze.Value.Origin), WindowsMixedRealityUtilities.SystemVector3ToUnity(eyes.Gaze.Value.Direction));
 
-                    InputSystem?.EyeGazeProvider?.UpdateEyeGaze(this, newGaze, eyes.UpdateTimestamp.TargetTime.UtcDateTime);
+                        if (SmoothEyeTracking)
+                        {
+                            newGaze = SmoothGaze(newGaze);
+                        }
+
+                        InputSystem?.EyeGazeProvider?.UpdateEyeGaze(this, newGaze, eyes.UpdateTimestamp.TargetTime.UtcDateTime);
+                    }
                 }
             }
 #endif // WINDOWS_UWP

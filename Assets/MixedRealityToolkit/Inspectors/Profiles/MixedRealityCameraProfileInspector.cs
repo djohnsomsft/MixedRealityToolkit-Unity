@@ -11,16 +11,19 @@ namespace Microsoft.MixedReality.Toolkit.Editor
     public class MixedRealityCameraProfileInspector : BaseMixedRealityToolkitConfigurationProfileInspector
     {
         private SerializedProperty opaqueNearClip;
+        private SerializedProperty opaqueFarClip;
         private SerializedProperty opaqueClearFlags;
         private SerializedProperty opaqueBackgroundColor;
         private SerializedProperty opaqueQualityLevel;
 
         private SerializedProperty transparentNearClip;
+        private SerializedProperty transparentFarClip;
         private SerializedProperty transparentClearFlags;
         private SerializedProperty transparentBackgroundColor;
         private SerializedProperty holoLensQualityLevel;
 
         private readonly GUIContent nearClipTitle = new GUIContent("Near Clip");
+        private readonly GUIContent farClipTitle = new GUIContent("Far Clip");
         private readonly GUIContent clearFlagsTitle = new GUIContent("Clear Flags");
 
         private const string ProfileTitle = "Camera Settings";
@@ -31,11 +34,13 @@ namespace Microsoft.MixedReality.Toolkit.Editor
             base.OnEnable();
 
             opaqueNearClip = serializedObject.FindProperty("nearClipPlaneOpaqueDisplay");
+            opaqueFarClip = serializedObject.FindProperty("farClipPlaneOpaqueDisplay");
             opaqueClearFlags = serializedObject.FindProperty("cameraClearFlagsOpaqueDisplay");
             opaqueBackgroundColor = serializedObject.FindProperty("backgroundColorOpaqueDisplay");
             opaqueQualityLevel = serializedObject.FindProperty("opaqueQualityLevel");
 
             transparentNearClip = serializedObject.FindProperty("nearClipPlaneTransparentDisplay");
+            transparentFarClip = serializedObject.FindProperty("farClipPlaneTransparentDisplay");
             transparentClearFlags = serializedObject.FindProperty("cameraClearFlagsTransparentDisplay");
             transparentBackgroundColor = serializedObject.FindProperty("backgroundColorTransparentDisplay");
             holoLensQualityLevel = serializedObject.FindProperty("holoLensQualityLevel");
@@ -43,7 +48,10 @@ namespace Microsoft.MixedReality.Toolkit.Editor
 
         public override void OnInspectorGUI()
         {
-            RenderProfileHeader(ProfileTitle, ProfileDescription, target);
+            if (!RenderProfileHeader(ProfileTitle, ProfileDescription, target))
+            {
+                return;
+            }
 
             using (new GUIEnabledWrapper(!IsProfileLock((BaseMixedRealityProfile)target)))
             {
@@ -53,6 +61,7 @@ namespace Microsoft.MixedReality.Toolkit.Editor
                 EditorGUILayout.LabelField("Opaque Display Settings", EditorStyles.boldLabel);
                 {
                     EditorGUILayout.PropertyField(opaqueNearClip, nearClipTitle);
+                    EditorGUILayout.PropertyField(opaqueFarClip, farClipTitle);
                     EditorGUILayout.PropertyField(opaqueClearFlags, clearFlagsTitle);
 
                     if ((CameraClearFlags)opaqueClearFlags.intValue == CameraClearFlags.Color)
@@ -67,6 +76,7 @@ namespace Microsoft.MixedReality.Toolkit.Editor
                 EditorGUILayout.LabelField("Transparent Display Settings", EditorStyles.boldLabel);
                 {
                     EditorGUILayout.PropertyField(transparentNearClip, nearClipTitle);
+                    EditorGUILayout.PropertyField(transparentFarClip, farClipTitle);
                     EditorGUILayout.PropertyField(transparentClearFlags, clearFlagsTitle);
 
                     if ((CameraClearFlags)transparentClearFlags.intValue == CameraClearFlags.Color)

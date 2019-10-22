@@ -15,10 +15,6 @@ namespace Microsoft.MixedReality.Toolkit.Input
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="trackingState"></param>
-        /// <param name="controllerHandedness"></param>
-        /// <param name="inputSource"></param>
-        /// <param name="interactions"></param>
         protected BaseController(TrackingState trackingState, Handedness controllerHandedness, IMixedRealityInputSource inputSource = null, MixedRealityInteractionMapping[] interactions = null)
         {
             TrackingState = trackingState;
@@ -31,23 +27,6 @@ namespace Microsoft.MixedReality.Toolkit.Input
             IsRotationAvailable = false;
 
             Enabled = true;
-        }
-
-        private IMixedRealityInputSystem inputSystem = null;
-
-        /// <summary>
-        /// The active instance of the input system.
-        /// </summary>
-        protected IMixedRealityInputSystem InputSystem
-        {
-            get
-            {
-                if (inputSystem == null)
-                {
-                    MixedRealityServiceRegistry.TryGetService<IMixedRealityInputSystem>(out inputSystem);
-                }
-                return inputSystem;
-            }
         }
 
         /// <summary>
@@ -97,20 +76,13 @@ namespace Microsoft.MixedReality.Toolkit.Input
 
         public Vector3 Velocity { get; protected set; }
 
-        public virtual bool IsInPointingPose
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public virtual bool IsInPointingPose => true;
 
         #endregion IMixedRealityController Implementation
 
         /// <summary>
         /// Setups up the configuration based on the Mixed Reality Controller Mapping Profile.
         /// </summary>
-        /// <param name="controllerType"></param>
         public bool SetupConfiguration(Type controllerType, InputSourceType inputSourceType = InputSourceType.Controller)
         {
             if (IsControllerMappingEnabled())
@@ -178,9 +150,8 @@ namespace Microsoft.MixedReality.Toolkit.Input
         }
 
         /// <summary>
-        /// Assign the default interactions based on controller handedness if necessary. 
+        /// Assign the default interactions based on controller handedness, if necessary. 
         /// </summary>
-        /// <param name="controllerHandedness"></param>
         public abstract void SetupDefaultInteractions(Handedness controllerHandedness);
 
         /// <summary>
@@ -228,7 +199,7 @@ namespace Microsoft.MixedReality.Toolkit.Input
                         controllerModel = GetControllerVisualizationProfile().GlobalRightHandModel;
                     }
                 }
-            
+
                 else if (inputSourceType == InputSourceType.Hand)
                 {
                     if (ControllerHandedness == Handedness.Left &&
@@ -252,7 +223,6 @@ namespace Microsoft.MixedReality.Toolkit.Input
 
             // If we've got a controller model prefab, then create it and place it in the scene.
             GameObject controllerObject = UnityEngine.Object.Instantiate(controllerModel);
-            MixedRealityPlayspace.AddChild(controllerObject.transform);
 
             return TryAddControllerModelToSceneHierarchy(controllerObject);
         }
@@ -262,6 +232,8 @@ namespace Microsoft.MixedReality.Toolkit.Input
             if (controllerObject != null)
             {
                 controllerObject.name = $"{ControllerHandedness}_{controllerObject.name}";
+
+                MixedRealityPlayspace.AddChild(controllerObject.transform);
 
                 Visualizer = controllerObject.GetComponent<IMixedRealityControllerVisualizer>();
 
@@ -283,19 +255,14 @@ namespace Microsoft.MixedReality.Toolkit.Input
         #region MRTK instance helpers
         protected MixedRealityControllerVisualizationProfile GetControllerVisualizationProfile()
         {
-            if (InputSystem?.InputSystemProfile != null)
-            {
-                return InputSystem.InputSystemProfile.ControllerVisualizationProfile;
-            }
-
-            return null;
+            return CoreServices.InputSystem?.InputSystemProfile?.ControllerVisualizationProfile;
         }
 
         protected bool IsControllerMappingEnabled()
         {
-            if (InputSystem?.InputSystemProfile != null)
+            if (CoreServices.InputSystem?.InputSystemProfile != null)
             {
-                return InputSystem.InputSystemProfile.IsControllerMappingEnabled;
+                return CoreServices.InputSystem.InputSystemProfile.IsControllerMappingEnabled;
             }
 
             return false;
@@ -303,12 +270,7 @@ namespace Microsoft.MixedReality.Toolkit.Input
 
         protected MixedRealityControllerMapping[] GetControllerMappings()
         {
-            if (InputSystem?.InputSystemProfile?.ControllerMappingProfile != null)
-            {
-                return InputSystem.InputSystemProfile.ControllerMappingProfile.MixedRealityControllerMappingProfiles;
-            }
-
-            return null;
+            return CoreServices.InputSystem?.InputSystemProfile?.ControllerMappingProfile?.MixedRealityControllerMappings;
         }
 
         #endregion MRTK instance helpers

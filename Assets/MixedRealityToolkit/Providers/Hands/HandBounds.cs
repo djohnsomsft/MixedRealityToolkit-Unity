@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Microsoft.MixedReality.Toolkit.Input
 {
     /// <summary>
-    /// Utility behavior to access the axis aligned bounds of IMixedRealityHands.
+    /// Utility behavior to access the axis aligned bounds of IMixedRealityHands (or the proxy visualizer of IMixedRealityControllers).
     /// </summary>
     public class HandBounds : MonoBehaviour, IMixedRealitySourceStateHandler, IMixedRealityHandJointHandler
     {
@@ -30,34 +30,18 @@ namespace Microsoft.MixedReality.Toolkit.Input
             set { drawBoundsGizmo = value; }
         }
 
-        private IMixedRealityInputSystem inputSystem = null;
-        
-        /// <summary>
-        /// The active instance of the input system.
-        /// </summary>
-        protected IMixedRealityInputSystem InputSystem
-        {
-            get
-            {
-                if (inputSystem == null)
-                {
-                    MixedRealityServiceRegistry.TryGetService<IMixedRealityInputSystem>(out inputSystem);
-                }
-
-                return inputSystem;
-            }
-        }
-
         #region MonoBehaviour Implementation
 
         private void OnEnable()
         {
-            InputSystem?.Register(gameObject);
+            CoreServices.InputSystem?.RegisterHandler<IMixedRealitySourceStateHandler>(this);
+            CoreServices.InputSystem?.RegisterHandler<IMixedRealityHandJointHandler>(this);
         }
 
         private void OnDisable()
         {
-            InputSystem?.Unregister(gameObject);
+            CoreServices.InputSystem?.UnregisterHandler<IMixedRealitySourceStateHandler>(this);
+            CoreServices.InputSystem?.UnregisterHandler<IMixedRealityHandJointHandler>(this);
         }
 
         private void OnDrawGizmos()
@@ -78,12 +62,39 @@ namespace Microsoft.MixedReality.Toolkit.Input
         /// <inheritdoc />
         public void OnSourceDetected(SourceStateEventData eventData)
         {
+            var hand = eventData.Controller;
+
+            if (hand != null)
+            {
+                // If a hand does not contain joints, OnHandJointsUpdated will not be called the bounds should
+                // be calculated based on the proxy visuals.
+                bool handContainsJoints = (hand as IMixedRealityHand) != null;
+
+                if (!handContainsJoints)
+                {
+                    var proxy = hand.Visualizer?.GameObjectProxy;
+
+                    if (proxy != null)
+                    {
+                        var newBounds = new Bounds(proxy.transform.position, Vector3.zero);
+                        var boundsPoints = new List<Vector3>();
+                        BoundsExtensions.GetRenderBoundsPoints(proxy, boundsPoints, 0);
+
+                        foreach (var point in boundsPoints)
+                        {
+                            newBounds.Encapsulate(point);
+                        }
+
+                        Bounds[hand.ControllerHandedness] = newBounds;
+                    }
+                }
+            }
         }
 
         /// <inheritdoc />
         public void OnSourceLost(SourceStateEventData eventData)
         {
-            var hand = eventData.Controller as IMixedRealityHand;
+            var hand = eventData.Controller;
 
             if (hand != null)
             {

@@ -12,13 +12,46 @@ using Object = UnityEngine.Object;
 
 namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
 {
+
     /// <summary>
     /// This class has handy inspector utilities and functions.
     /// </summary>
     public static class MixedRealityInspectorUtility
     {
+        #region Colors
+
+        public static Color DefaultBackgroundColor
+        {
+            get
+            {
+                return EditorGUIUtility.isProSkin
+                    ? new Color32(56, 56, 56, 255)
+                    : new Color32(194, 194, 194, 255);
+            }
+        }
+
+        public static readonly Color DisabledColor = new Color(0.6f, 0.6f, 0.6f);
+        public static readonly Color WarningColor = new Color(1f, 0.85f, 0.6f);
+        public static readonly Color ErrorColor = new Color(1f, 0.55f, 0.5f);
+        public static readonly Color SuccessColor = new Color(0.8f, 1f, 0.75f);
+        public static readonly Color SectionColor = new Color(0.85f, 0.9f, 1f);
+        public static readonly Color DarkColor = new Color(0.1f, 0.1f, 0.1f);
+        public static readonly Color HandleColorSquare = new Color(0.0f, 0.9f, 1f);
+        public static readonly Color HandleColorCircle = new Color(1f, 0.5f, 1f);
+        public static readonly Color HandleColorSphere = new Color(1f, 0.5f, 1f);
+        public static readonly Color HandleColorAxis = new Color(0.0f, 1f, 0.2f);
+        public static readonly Color HandleColorRotation = new Color(0.0f, 1f, 0.2f);
+        public static readonly Color HandleColorTangent = new Color(0.1f, 0.8f, 0.5f, 0.7f);
+        public static readonly Color LineVelocityColor = new Color(0.9f, 1f, 0f, 0.8f);
+
+        #endregion Colors
+
         public const float DottedLineScreenSpace = 4.65f;
         public const string DefaultConfigProfileName = "DefaultMixedRealityToolkitConfigurationProfile";
+
+        public static readonly Texture2D LogoLightTheme = (Texture2D)AssetDatabase.LoadAssetAtPath(MixedRealityToolkitFiles.MapRelativeFilePath("StandardAssets/Textures/MRTK_Logo_Black.png"), typeof(Texture2D));
+
+        public static readonly Texture2D LogoDarkTheme = (Texture2D)AssetDatabase.LoadAssetAtPath(MixedRealityToolkitFiles.MapRelativeFilePath("StandardAssets/Textures/MRTK_Logo_White.png"), typeof(Texture2D));
 
         /// <summary>
         /// Check and make sure we have a Mixed Reality Toolkit and an active profile.
@@ -59,6 +92,19 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
                     newInstance.ActiveProfile = configProfile;
                 }
             }
+        }
+
+        /// <summary>
+        /// Render the Mixed Reality Toolkit Logo.
+        /// </summary>
+        public static void RenderMixedRealityToolkitLogo()
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            GUILayout.Label(EditorGUIUtility.isProSkin ? LogoDarkTheme : LogoLightTheme, GUILayout.MaxHeight(96f));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.Space(3f);
         }
 
         /// <summary>
@@ -104,7 +150,7 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
 
             foreach (var assembly in assemblies)
             {
-                var types = assembly.GetTypes();
+                var types = assembly.GetLoadableTypes();
                 result.AddRange(types.Where(type => type.IsSubclassOf(aType)));
             }
 
@@ -114,7 +160,6 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
         /// <summary>
         /// Centers an editor window on the main display.
         /// </summary>
-        /// <param name="window"></param>
         public static void CenterOnMainWin(this EditorWindow window)
         {
             var main = GetEditorMainWindowPos();
@@ -125,25 +170,6 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
             pos.y = main.y + h;
             window.position = pos;
         }
-
-        #region Colors
-
-        public static readonly Color DisabledColor = new Color(0.6f, 0.6f, 0.6f);
-        public static readonly Color WarningColor = new Color(1f, 0.85f, 0.6f);
-        public static readonly Color ErrorColor = new Color(1f, 0.55f, 0.5f);
-        public static readonly Color SuccessColor = new Color(0.8f, 1f, 0.75f);
-        public static readonly Color SectionColor = new Color(0.85f, 0.9f, 1f);
-        public static readonly Color DarkColor = new Color(0.1f, 0.1f, 0.1f);
-        public static readonly Color HandleColorSquare = new Color(0.0f, 0.9f, 1f);
-        public static readonly Color HandleColorCircle = new Color(1f, 0.5f, 1f);
-        public static readonly Color HandleColorSphere = new Color(1f, 0.5f, 1f);
-        public static readonly Color HandleColorAxis = new Color(0.0f, 1f, 0.2f);
-        public static readonly Color HandleColorRotation = new Color(0.0f, 1f, 0.2f);
-        public static readonly Color HandleColorTangent = new Color(0.1f, 0.8f, 0.5f, 0.7f);
-        public static readonly Color LineVelocityColor = new Color(0.9f, 1f, 0f, 0.8f);
-        public static readonly float DocLinkWidth = 175f;
-
-        #endregion Colors
 
         #region Handles
 
@@ -190,7 +216,6 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
         /// <summary>
         /// Returns the default config profile, if it exists.
         /// </summary>
-        /// <returns></returns>
         public static MixedRealityToolkitConfigurationProfile GetDefaultConfigProfile()
         {
             var allConfigProfiles = ScriptableObjectExtensions.GetAllInstances<MixedRealityToolkitConfigurationProfile>();
@@ -324,8 +349,6 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
         /// Draw a vector handle.
         /// </summary>
         /// <param name="target"><see href="https://docs.unity3d.com/ScriptReference/Object.html">Object</see> that is undergoing the transformation. Also used for recording undo.</param>
-        /// <param name="origin"></param>
-        /// <param name="vector"></param>
         /// <param name="normalize">Optional, Normalize the new vector value.</param>
         /// <param name="clamp">Optional, Clamp new vector's value based on the distance to the origin.</param>
         /// <param name="handleLength">Optional, handle length.</param>
@@ -441,5 +464,130 @@ namespace Microsoft.MixedReality.Toolkit.Utilities.Editor
         }
 
         #endregion Handles
+
+        #region Profiles
+
+        private static readonly GUIContent NewProfileContent = new GUIContent("+", "Create New Profile");
+        private static Dictionary<Object, UnityEditor.Editor> profileEditorCache = new Dictionary<Object, UnityEditor.Editor>();
+
+        /// <summary>
+        /// Draws an editor for a profile object.
+        /// </summary>
+        public static void DrawSubProfileEditor(Object profileObject, bool renderProfileInBox)
+        {
+            if (profileObject == null)
+            {
+                return;
+            }
+
+            UnityEditor.Editor subProfileEditor = null;
+            if (!profileEditorCache.TryGetValue(profileObject, out subProfileEditor))
+            {
+                subProfileEditor = UnityEditor.Editor.CreateEditor(profileObject);
+                profileEditorCache.Add(profileObject, subProfileEditor);
+            }
+
+            // If this is a default MRTK configuration profile, ask it to render as a sub-profile
+            if (typeof(BaseMixedRealityToolkitConfigurationProfileInspector).IsAssignableFrom(subProfileEditor.GetType()))
+            {
+                BaseMixedRealityToolkitConfigurationProfileInspector configProfile = (BaseMixedRealityToolkitConfigurationProfileInspector)subProfileEditor;
+                configProfile.RenderAsSubProfile = true;
+            }
+
+            var subProfile = profileObject as BaseMixedRealityProfile;
+            if (subProfile != null && !subProfile.IsCustomProfile)
+            {
+                EditorGUILayout.HelpBox("Clone this default profile to edit properties below", MessageType.Warning);
+            }
+
+            if (renderProfileInBox)
+            {
+                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            }
+            else
+            {
+                EditorGUILayout.BeginVertical();
+            }
+
+            EditorGUILayout.Space();
+            subProfileEditor.OnInspectorGUI();
+            EditorGUILayout.Space();
+
+            EditorGUILayout.EndVertical();
+        }
+
+        /// <summary>
+        /// Draws a dropdown with all available profiles of profilyType.
+        /// </summary>
+        /// <returns>True if property was changed.</returns>
+        public static bool DrawProfileDropDownList(SerializedProperty property, BaseMixedRealityProfile profile, Object oldProfileObject, Type profileType, bool showAddButton)
+        {
+            bool changed = false;
+
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                // Pull profile instances and profile content from cache
+                ScriptableObject[] profileInstances = MixedRealityProfileUtility.GetProfilesOfType(profileType);
+                GUIContent[] profileContent = MixedRealityProfileUtility.GetProfilePopupOptionsByType(profileType);
+                // Set our selected index to our '(None)' option by default
+                int selectedIndex = 0;
+                // Find our selected index
+                for (int i = 0; i < profileInstances.Length; i++)
+                {
+                    if (profileInstances[i] == oldProfileObject)
+                    {   // Our profile content has a '(None)' option at the start
+                        selectedIndex = i + 1;
+                        break;
+                    }
+                }
+
+                int newIndex = EditorGUILayout.Popup(
+                    new GUIContent(oldProfileObject != null ? "" : property.displayName),
+                    selectedIndex, 
+                    profileContent,
+                    GUILayout.ExpandWidth(true));
+
+                property.objectReferenceValue = (newIndex > 0) ? profileInstances[newIndex - 1] : null;
+                changed = property.objectReferenceValue != oldProfileObject;
+
+                // Draw a button that finds the profile in the project window
+                if (property.objectReferenceValue != null)
+                {
+                    if (GUILayout.Button("View Asset", EditorStyles.miniButton, GUILayout.Width(80)))
+                    {
+                        EditorGUIUtility.PingObject(property.objectReferenceValue);
+                    }
+                }
+
+                // Draw the clone button
+                if (property.objectReferenceValue == null)
+                {
+                    if (showAddButton && MixedRealityProfileUtility.IsConcreteProfileType(profileType))
+                    {
+                        if (GUILayout.Button(NewProfileContent, EditorStyles.miniButton, GUILayout.Width(20f)))
+                        {
+                            ScriptableObject instance = ScriptableObject.CreateInstance(profileType);
+                            var newProfile = instance.CreateAsset(AssetDatabase.GetAssetPath(Selection.activeObject)) as BaseMixedRealityProfile;
+                            property.objectReferenceValue = newProfile;
+                            property.serializedObject.ApplyModifiedProperties();
+                            changed = true;
+                        }
+                    }
+                }
+                else
+                {
+                    var renderedProfile = property.objectReferenceValue as BaseMixedRealityProfile;
+                    Debug.Assert(renderedProfile != null);
+                    if (GUILayout.Button(new GUIContent("Clone", "Replace with a copy of the default profile."), EditorStyles.miniButton, GUILayout.Width(45f)))
+                    {
+                        MixedRealityProfileCloneWindow.OpenWindow(profile, renderedProfile, property);
+                    }
+                }
+            }
+
+            return changed;
+        }
+
+        #endregion
     }
 }

@@ -19,7 +19,7 @@ namespace Microsoft.MixedReality.Toolkit.SceneSystem
     /// The default implementation of the <see cref="Microsoft.MixedReality.Toolkit.SceneSystem.IMixedRealitySceneSystem"/>
     /// This file handles the editor-oriented parts of the service.
     /// </summary>
-    public partial class MixedRealitySceneSystem : BaseCoreSystem, IMixedRealitySceneSystem
+    public partial class MixedRealitySceneSystem : BaseCoreSystem, IMixedRealitySceneSystem, IMixedRealitySceneSystemEditor
     {
 
 #if UNITY_EDITOR
@@ -38,6 +38,26 @@ namespace Microsoft.MixedReality.Toolkit.SceneSystem
                 return paths;
             }
         }
+
+        /// <summary>
+        /// Returns the manager scene found in profile.
+        /// </summary>
+        public SceneInfo ManagerScene => profile.ManagerScene;
+
+        /// <summary>
+        /// Returns all lighting scenes found in profile.
+        /// </summary>
+        public SceneInfo[] LightingScenes => contentTracker.SortedLightingScenes;
+
+        /// <summary>
+        /// Returns all content scenes found in profile.
+        /// </summary>
+        public SceneInfo[] ContentScenes => contentTracker.SortedContentScenes;
+
+        /// <summary>
+        /// Returns all content tags found in profile scenes.
+        /// </summary>
+        public IEnumerable<string> ContentTags => profile.ContentTags;
 
         // Cache these so we're not looking them up constantly
         private EditorBuildSettingsScene[] cachedBuildScenes = new EditorBuildSettingsScene[0];
@@ -67,7 +87,6 @@ namespace Microsoft.MixedReality.Toolkit.SceneSystem
         /// Singly loads next content scene (if available) and unloads all other content scenes.
         /// Useful for inspectors.
         /// </summary>
-        /// <param name="wrap"></param>
         public void EditorLoadNextContent(bool wrap = false)
         {
             string contentSceneName;
@@ -93,7 +112,6 @@ namespace Microsoft.MixedReality.Toolkit.SceneSystem
         /// Singly loads previous content scene (if available) and unloads all other content scenes.
         /// Useful for inspectors.
         /// </summary>
-        /// <param name="wrap"></param>
         public void EditorLoadPrevContent(bool wrap = false)
         {
             string contentSceneName;
@@ -164,6 +182,8 @@ namespace Microsoft.MixedReality.Toolkit.SceneSystem
             EditorSceneManager.newSceneCreated += EditorSceneManagerNewSceneCreated;
             EditorSceneManager.sceneOpened += EditorSceneManagerSceneOpened;
             EditorSceneManager.sceneClosed += EditorSceneManagerSceneClosed;
+
+            EditorBuildSettings.sceneListChanged += EditorSceneListChanged;
         }
 
         private void EditorUnsubscribeFromEvents()
@@ -175,6 +195,8 @@ namespace Microsoft.MixedReality.Toolkit.SceneSystem
             EditorSceneManager.newSceneCreated += EditorSceneManagerNewSceneCreated;
             EditorSceneManager.sceneOpened -= EditorSceneManagerSceneOpened;
             EditorSceneManager.sceneClosed -= EditorSceneManagerSceneClosed;
+
+            EditorBuildSettings.sceneListChanged -= EditorSceneListChanged;
         }
 
         #endregion
@@ -202,6 +224,13 @@ namespace Microsoft.MixedReality.Toolkit.SceneSystem
         private void EditorApplicationProjectChanged()
         {
             buildSettingsDirty = true;
+        }
+
+        private void EditorSceneListChanged()
+        {
+            buildSettingsDirty = true;
+
+            EditorCheckForChanges();
         }
 
         private void EditorSceneManagerSceneClosed(Scene scene) { activeSceneDirty = true; }
@@ -260,11 +289,16 @@ namespace Microsoft.MixedReality.Toolkit.SceneSystem
 
             if (buildSettingsDirty)
             {
+                buildSettingsDirty = false;
+
                 EditorUpdateBuildSettings();
             }
 
             if (activeSceneDirty || heirarchyDirty)
             {
+                heirarchyDirty = false;
+                activeSceneDirty = false;
+
                 EditorUpdateManagerScene();
                 EditorUpdateLightingScene(heirarchyDirty);
                 EditorUpdateContentScenes(activeSceneDirty);
@@ -272,11 +306,9 @@ namespace Microsoft.MixedReality.Toolkit.SceneSystem
                 contentTracker.RefreshLoadedContent();
             }
 
-            updatingSettingsOnEditorChanged = false;
+            EditorUtility.SetDirty(profile);
 
-            buildSettingsDirty = false;
-            heirarchyDirty = false;
-            activeSceneDirty = false;
+            updatingSettingsOnEditorChanged = false;
         }
         
         /// <summary>
@@ -310,7 +342,6 @@ namespace Microsoft.MixedReality.Toolkit.SceneSystem
         /// <summary>
         /// Loads all lighting scenes, extracts their lighting data, then caches that data in the profile.
         /// </summary>
-        /// <returns></returns>
         private async Task EditorUpdateCachedLighting()
         {
             // Clear out our lighting cache
@@ -377,7 +408,6 @@ namespace Microsoft.MixedReality.Toolkit.SceneSystem
         /// <summary>
         /// Ensures that if a content scene is loaded, that scene is set active, rather than a lighting or manager scene.
         /// </summary>
-        /// <param name="activeSceneDirty"></param>
         private void EditorUpdateContentScenes(bool activeSceneDirty)
         {
             if (!profile.UseLightingScene || !profile.EditorManageLoadedScenes)
@@ -485,14 +515,13 @@ namespace Microsoft.MixedReality.Toolkit.SceneSystem
                     {
                         // This can happen if the scene isn't valid
                         // Not an issue - we'll take care of it on the next update.
+                        return;
                     }
 
                     if (!foundToolkitInstance)
                     {
                         GameObject mrtkGo = new GameObject("MixedRealityToolkit");
                         MixedRealityToolkit toolkitInstance = mrtkGo.AddComponent<MixedRealityToolkit>();
-                        // Set the config profile to use the same profile as the current instance
-                        toolkitInstance.ActiveProfile = MixedRealityToolkit.Instance.ActiveProfile;
 
                         try
                         {
@@ -523,7 +552,6 @@ namespace Microsoft.MixedReality.Toolkit.SceneSystem
         /// <summary>
         /// If a lighting scene is being used, this ensures that at least one lighting scene is loaded in editor.
         /// </summary>
-        /// <param name="heirarchyDirty"></param>
         private void EditorUpdateLightingScene(bool heirarchyDirty)
         {
             if (!profile.UseLightingScene || !profile.EditorManageLoadedScenes)
@@ -569,7 +597,6 @@ namespace Microsoft.MixedReality.Toolkit.SceneSystem
         /// <summary>
         /// Ensures that only approved component types are present in lighting scenes.
         /// </summary>
-        /// <param name="scene"></param>
         private void EditorEnforceLightingSceneTypes(Scene scene)
         {
             if (EditorSceneManager.sceneCount == 1)
@@ -641,38 +668,40 @@ namespace Microsoft.MixedReality.Toolkit.SceneSystem
                 return;
             }
 
-            bool changedScenes = false;
-
             if (profile.UseManagerScene)
             {
-                changedScenes |= EditorSceneUtils.AddSceneToBuildSettings(
-                    profile.ManagerScene, 
-                    cachedBuildScenes, 
-                    EditorSceneUtils.BuildIndexTarget.First);
+                if (EditorSceneUtils.AddSceneToBuildSettings(
+                    profile.ManagerScene,
+                    cachedBuildScenes,
+                    EditorSceneUtils.BuildIndexTarget.First))
+                {
+                    cachedBuildScenes = EditorBuildSettings.scenes;
+                }
             }
 
             foreach (SceneInfo contentScene in profile.ContentScenes)
             {
-                changedScenes |= EditorSceneUtils.AddSceneToBuildSettings(
+                if (EditorSceneUtils.AddSceneToBuildSettings(
                     contentScene,
                     cachedBuildScenes, 
-                    EditorSceneUtils.BuildIndexTarget.None);
+                    EditorSceneUtils.BuildIndexTarget.None))
+                {
+                    cachedBuildScenes = EditorBuildSettings.scenes;
+                }
             }
 
             if (profile.UseLightingScene)
             {
                 foreach (SceneInfo lightingScene in profile.LightingScenes)
                 {   // Make sure ALL lighting scenes are added to build settings
-                    changedScenes |= EditorSceneUtils.AddSceneToBuildSettings(
+                    if (EditorSceneUtils.AddSceneToBuildSettings(
                         lightingScene, 
-                        cachedBuildScenes, 
-                        EditorSceneUtils.BuildIndexTarget.Last);
+                        cachedBuildScenes,
+                        EditorSceneUtils.BuildIndexTarget.Last))
+                    {
+                        cachedBuildScenes = EditorBuildSettings.scenes;
+                    }
                 }
-            }
-
-            if (changedScenes)
-            {   // If we made changes, cache the build scenes again
-                cachedBuildScenes = EditorBuildSettings.scenes;
             }
 
             EditorCheckForSceneNameDuplicates();

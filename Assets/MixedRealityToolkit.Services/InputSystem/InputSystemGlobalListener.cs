@@ -11,32 +11,19 @@ namespace Microsoft.MixedReality.Toolkit.Input
     /// <summary>
     /// This component ensures that all input events are forwarded to this <see href="https://docs.unity3d.com/ScriptReference/GameObject.html">GameObject</see> when focus or gaze is not required.
     /// </summary>
+    [Obsolete("InputSystemGlobalListener uses obsolete global input event registration API. " +
+        "Use RegisterHandler/UnregisterHandler API directly (preferred) or InputSystemGlobalHandlerListener instead.")]
     public class InputSystemGlobalListener : MonoBehaviour
     {
         private bool lateInitialize = true;
 
-        private IMixedRealityInputSystem inputSystem = null;
-
-        /// <summary>
-        /// The active instance of the input system.
-        /// </summary>
-        protected IMixedRealityInputSystem InputSystem
-        {
-            get
-            {
-                if (inputSystem == null)
-                {
-                    MixedRealityServiceRegistry.TryGetService<IMixedRealityInputSystem>(out inputSystem);
-                }
-                return inputSystem;
-            }
-        }
-
         protected virtual void OnEnable()
         {
-            if (InputSystem != null && !lateInitialize)
+            if (CoreServices.InputSystem != null && !lateInitialize)
             {
-                InputSystem.Register(gameObject);
+            #pragma warning disable 0618
+                CoreServices.InputSystem.Register(gameObject);
+            #pragma warning restore 0618
             }
         }
 
@@ -53,13 +40,17 @@ namespace Microsoft.MixedReality.Toolkit.Input
                 }
 
                 lateInitialize = false;
-                InputSystem.Register(gameObject);
+            #pragma warning disable 0618
+                CoreServices.InputSystem.Register(gameObject);
+            #pragma warning restore 0618
             }
         }
 
         protected virtual void OnDisable()
         {
-            InputSystem?.Unregister(gameObject);
+        #pragma warning disable 0618
+            CoreServices.InputSystem?.Unregister(gameObject);
+        #pragma warning restore 0618
         }
 
         /// <summary>
@@ -71,9 +62,9 @@ namespace Microsoft.MixedReality.Toolkit.Input
         /// </remarks>
         protected async Task EnsureInputSystemValid()
         {
-            if (InputSystem == null)
+            if (CoreServices.InputSystem == null)
             {
-                await new WaitUntil(() => InputSystem != null);
+                await new WaitUntil(() => CoreServices.InputSystem != null);
             }
         }
     }

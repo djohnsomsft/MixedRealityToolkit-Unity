@@ -2,7 +2,6 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace Microsoft.MixedReality.Toolkit.Input
 {
@@ -30,6 +29,22 @@ namespace Microsoft.MixedReality.Toolkit.Input
         /// Includes the input event that triggered the action.
         /// </summary>
         public InputActionUnityEvent OnInputActionEnded;
+
+        #region InputSystemGlobalHandlerListener Implementation
+
+        /// <inheritdoc />
+        protected override void RegisterHandlers()
+        {
+            CoreServices.InputSystem?.RegisterHandler<IMixedRealityInputActionHandler>(this);
+        }
+
+        /// <inheritdoc />
+        protected override void UnregisterHandlers()
+        {
+            CoreServices.InputSystem?.UnregisterHandler<IMixedRealityInputActionHandler>(this);
+        }
+
+        #endregion InputSystemGlobalHandlerListener Implementation
 
         void IMixedRealityInputActionHandler.OnActionStarted(BaseInputEventData eventData)
         {

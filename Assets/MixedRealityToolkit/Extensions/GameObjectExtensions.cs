@@ -16,7 +16,7 @@ namespace Microsoft.MixedReality.Toolkit
         {
             for (int i = 0; i < root.transform.childCount; i++)
             {
-                root.transform.GetChild(i).gameObject.SetActive(false);
+                root.transform.GetChild(i).gameObject.SetActive(isActive);
             }
         }
 
@@ -127,6 +127,23 @@ namespace Microsoft.MixedReality.Toolkit
             foreach (T i in gameObject.GetComponents<T>())
             {
                 action(i);
+            }
+        }
+
+        /// <summary>
+        /// Destroys gameobject appropriately depending if in edit or playmode
+        /// </summary>
+        /// <param name="gameObject">gameobject to destroy</param>
+        /// <param name="t">time in seconds at which to destroy GameObject if applicable</param>
+        public static void DestroyGameObject(GameObject gameObject, float t = 0.0f)
+        {
+            if (Application.isPlaying)
+            {
+                GameObject.Destroy(gameObject, t);
+            }
+            else
+            {
+                GameObject.DestroyImmediate(gameObject);
             }
         }
     }

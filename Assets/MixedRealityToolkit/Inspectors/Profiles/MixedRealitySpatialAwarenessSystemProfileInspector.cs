@@ -16,7 +16,7 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
         private static readonly GUIContent RemoveObserverContent = new GUIContent("-", "Remove Spatial Observer");
 
         private static readonly GUIContent ComponentTypeContent = new GUIContent("Type");
-        private static readonly GUIContent RuntimePlatformContent = new GUIContent("Platform(s)");
+        private static readonly GUIContent RuntimePlatformContent = new GUIContent("Supported Platform(s)");
 
         private SerializedProperty observerConfigurations;
 
@@ -39,7 +39,10 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
 
         public override void OnInspectorGUI()
         {
-            RenderProfileHeader(ProfileTitle, ProfileDescription, target);
+            if (!RenderProfileHeader(ProfileTitle, ProfileDescription, target))
+            {
+                return;
+            }
 
             using (new GUIEnabledWrapper(!IsProfileLock((BaseMixedRealityProfile)target)))
             {
@@ -68,7 +71,7 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
 
             using (new EditorGUILayout.VerticalScope())
             {
-                if (MixedRealityEditorUtility.RenderIndentedButton(AddObserverContent, EditorStyles.miniButton))
+                if (InspectorUIUtility.RenderIndentedButton(AddObserverContent, EditorStyles.miniButton))
                 {
                     list.InsertArrayElementAtIndex(list.arraySize);
                     SerializedProperty observer = list.GetArrayElementAtIndex(list.arraySize - 1);
@@ -136,13 +139,9 @@ namespace Microsoft.MixedReality.Toolkit.SpatialAwareness.Editor
                             EditorGUILayout.PropertyField(runtimePlatform, RuntimePlatformContent);
                             changed |= EditorGUI.EndChangeCheck();
 
-                            System.Type serviceType = null;
-                            if (observerProfile.objectReferenceValue != null)
-                            {
-                                serviceType = (target as MixedRealitySpatialAwarenessSystemProfile).ObserverConfigurations[i].ComponentType;
-                            }
+                            var serviceType = (target as MixedRealitySpatialAwarenessSystemProfile).ObserverConfigurations[i].ComponentType;
 
-                            changed |= RenderProfile(observerProfile, null, true, false, serviceType);
+                            changed |= RenderProfile(observerProfile, typeof(BaseSpatialAwarenessObserverProfile), true, false, serviceType);
 
                             serializedObject.ApplyModifiedProperties();
                         }

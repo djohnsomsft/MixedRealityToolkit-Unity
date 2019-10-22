@@ -8,12 +8,24 @@ namespace Microsoft.MixedReality.Toolkit.Utilities
     /// <summary>
     /// Synchronizes the follower's transform position with the point along the line.
     /// </summary>
-    [ExecuteInEditMode]
+    [ExecuteAlways]
     public class LineFollower : MonoBehaviour
     {
         [SerializeField]
         [Tooltip("The transform that will follow the point along the line.")]
         private Transform follower;
+
+        [SerializeField]
+        [Tooltip("The transform rotation will be included from the line.")]
+        private bool includeRotation = false;
+
+        [SerializeField]
+        [Tooltip("The transform scale will be included based of the Scale Over Length.")]
+        private bool includeScale = false;
+
+        [SerializeField]
+        [Tooltip("Animation curve used for scale over the normalized length.")]
+        private AnimationCurve scaleOverLength = new AnimationCurve(new Keyframe(0, 1), new Keyframe(1, 1));
 
         /// <summary>
         /// The transform that will follow the point along the line.
@@ -68,10 +80,8 @@ namespace Microsoft.MixedReality.Toolkit.Utilities
         private BaseMixedRealityLineDataProvider source = null;
 
         #region MonoBehaviour Implementation
-
-        private void OnValidate() => EnsureSetup();
-
-        private void Awake() => EnsureSetup();
+        
+        private void OnEnable() => EnsureSetup();
 
         private void Update()
         {
@@ -79,6 +89,17 @@ namespace Microsoft.MixedReality.Toolkit.Utilities
 
             Vector3 linePoint = source.GetPoint(normalizedLength);
             follower.position = linePoint;
+
+            if (includeRotation)
+            {
+                Quaternion lineRotation = source.GetRotation(normalizedLength);
+                follower.rotation = lineRotation;
+            }
+
+            if (includeScale)
+            {
+                follower.localScale = Vector3.one * scaleOverLength.Evaluate(normalizedLength);
+            }
         }
 
         #endregion MonoBehaviour Implementation

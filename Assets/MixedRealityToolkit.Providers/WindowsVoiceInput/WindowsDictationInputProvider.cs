@@ -17,8 +17,8 @@ namespace Microsoft.MixedReality.Toolkit.Windows.Input
         typeof(IMixedRealityInputSystem),
         SupportedPlatforms.WindowsStandalone | SupportedPlatforms.WindowsUniversal | SupportedPlatforms.WindowsEditor,
         "Windows Dictation Input")]
-    [DocLink("https://microsoft.github.io/MixedRealityToolkit-Unity/Documentation/Input/Dictation.html")]
-    public class WindowsDictationInputProvider : BaseInputDeviceManager, IMixedRealityDictationSystem
+    [HelpURL("https://microsoft.github.io/MixedRealityToolkit-Unity/Documentation/Input/Dictation.html")]
+    public class WindowsDictationInputProvider : BaseInputDeviceManager, IMixedRealityDictationSystem, IMixedRealityCapabilityCheck
     {
         /// <summary>
         /// Constructor.
@@ -37,6 +37,16 @@ namespace Microsoft.MixedReality.Toolkit.Windows.Input
 
         /// <inheritdoc />
         public bool IsListening { get; private set; } = false;
+
+        #region IMixedRealityCapabilityCheck Implementation
+
+        /// <inheritdoc />
+        public bool CheckCapability(MixedRealityCapability capability)
+        {
+            return (capability == MixedRealityCapability.VoiceDictation);
+        }
+
+        #endregion IMixedRealityCapabilityCheck Implementation
 
         /// <inheritdoc />
         public async void StartRecording(GameObject listener, float initialSilenceTimeout = 5, float autoSilenceTimeout = 20, int recordingTime = 10, string micDeviceName = "")
@@ -189,21 +199,19 @@ namespace Microsoft.MixedReality.Toolkit.Windows.Input
         private readonly WaitUntil waitUntilDictationRecognizerHasStarted = new WaitUntil(() => dictationRecognizer.Status != SpeechSystemStatus.Stopped);
         private readonly WaitUntil waitUntilDictationRecognizerHasStopped = new WaitUntil(() => dictationRecognizer.Status != SpeechSystemStatus.Running);
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR && UNITY_WSA
         /// <inheritdoc />
         public override void Initialize()
         {
-            if (!UnityEditor.PlayerSettings.WSA.GetCapability(UnityEditor.PlayerSettings.WSACapability.Microphone))
-            {
-                UnityEditor.PlayerSettings.WSA.SetCapability(UnityEditor.PlayerSettings.WSACapability.Microphone, true);
-            }
+            Toolkit.Utilities.Editor.UWPCapabilityUtility.RequireCapability(
+                UnityEditor.PlayerSettings.WSACapability.InternetClient,
+                this.GetType());
 
-            if (!UnityEditor.PlayerSettings.WSA.GetCapability(UnityEditor.PlayerSettings.WSACapability.InternetClient))
-            {
-                UnityEditor.PlayerSettings.WSA.SetCapability(UnityEditor.PlayerSettings.WSACapability.InternetClient, true);
-            }
+            Toolkit.Utilities.Editor.UWPCapabilityUtility.RequireCapability(
+                UnityEditor.PlayerSettings.WSACapability.Microphone,
+                this.GetType());
         }
-#endif // UNITY_EDITOR
+#endif
 
         /// <inheritdoc />
         public override void Enable()
@@ -273,22 +281,6 @@ namespace Microsoft.MixedReality.Toolkit.Windows.Input
                 dictationRecognizer.DictationComplete -= DictationRecognizer_DictationComplete;
                 dictationRecognizer.DictationError -= DictationRecognizer_DictationError;
             }
-        }
-
-        /// <inheritdoc />
-        public override void Destroy()
-        {
-#if UNITY_EDITOR
-            if (UnityEditor.PlayerSettings.WSA.GetCapability(UnityEditor.PlayerSettings.WSACapability.Microphone))
-            {
-                UnityEditor.PlayerSettings.WSA.SetCapability(UnityEditor.PlayerSettings.WSACapability.Microphone, false);
-            }
-
-            if (UnityEditor.PlayerSettings.WSA.GetCapability(UnityEditor.PlayerSettings.WSACapability.InternetClient))
-            {
-                UnityEditor.PlayerSettings.WSA.SetCapability(UnityEditor.PlayerSettings.WSACapability.InternetClient, false);
-            }
-#endif // UNITY_EDITOR
         }
 
         /// <inheritdoc />

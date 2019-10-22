@@ -19,6 +19,7 @@ namespace Microsoft.MixedReality.Toolkit.Input
         [UnityEditor.CustomEditor(typeof(NearInteractionTouchableVolume))]
         public class Editor : UnityEditor.Editor
         {
+            /// <inheritdoc />
             public override void OnInspectorGUI()
             {
                 base.OnInspectorGUI();
@@ -33,32 +34,44 @@ namespace Microsoft.MixedReality.Toolkit.Input
         }
 #endif
 
+        public bool ColliderEnabled { get { return touchableCollider.enabled && touchableCollider.gameObject.activeInHierarchy; } }
+
+        /// <summary>
+        /// The collider used by this touchable.
+        /// </summary>
+        [SerializeField]
+        [FormerlySerializedAs("collider")]
+        private Collider touchableCollider;
+        public Collider TouchableCollider => touchableCollider;
+
+        protected override void OnValidate()
+        {
+            base.OnValidate();
+
+            touchableCollider = GetComponent<Collider>();
+        }
+
+        /// <inheritdoc />
         public override float DistanceToTouchable(Vector3 samplePoint, out Vector3 normal)
         {
-            if (usesCollider)
+            Vector3 closest = TouchableCollider.ClosestPoint(samplePoint);
+
+            normal = (samplePoint - closest);
+            if (normal == Vector3.zero)
             {
-                touchableCollider = GetComponent<Collider>();
-
-                Vector3 closest = touchableCollider.ClosestPoint(samplePoint);
-
-                normal = (samplePoint - closest);
-                if (normal == Vector3.zero)
-                {
-                    // inside object, use vector to centre as normal
-                    normal = samplePoint - transform.TransformVector(touchableCollider.bounds.center);
-                    normal.Normalize();
-                    return 0;
-                }
-                else
-                {
-                    float dist = normal.magnitude;
-                    normal.Normalize();
-                    return dist;
-                }
+                // inside object, use vector to centre as normal
+                normal = samplePoint - TouchableCollider.bounds.center;
+                normal.Normalize();
+                // Return value less than zero so that when poke pointer is inside
+                // object, it will not raise a touch up event.
+                return -1;
             }
-
-            normal = Vector3.forward;
-            return float.PositiveInfinity;
+            else
+            {
+                float dist = normal.magnitude;
+                normal.Normalize();
+                return dist;
+            }
         }
     }
 }
