@@ -14,21 +14,13 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
     public class MixedRealityTeleportSystem : BaseCoreSystem, IMixedRealityTeleportSystem
     {
         public MixedRealityTeleportSystem(
-            IMixedRealityServiceRegistrar registrar,
-            Transform playspace) : base(registrar, null) // Teleport system does not use a profile
+            IMixedRealityServiceRegistrar registrar) : base(registrar, null) // Teleport system does not use a profile
         {
             if (registrar == null)
             {
                 Debug.LogError("The MixedRealityTeleportSystem object requires a valid IMixedRealityServiceRegistrar instance.");
             }
             IsInputSystemEnabled = (registrar.GetService<IMixedRealityInputSystem>(showLogs: false) != null);
-
-            if (playspace == null)
-            {
-                Debug.LogError("The MixedRealityTeleportSystem object requires a valid playspace Transform.");
-            }
-
-            Playspace = playspace;
         } 
 
         private TeleportEventData teleportEventData;
@@ -45,6 +37,9 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
         private GameObject eventSystemReference = null;
 
         #region IMixedRealityService Implementation
+
+        /// <inheritdoc/>
+        public override string Name { get; protected set; } = "Mixed Reality Teleport System";
 
         /// <inheritdoc />
         public override void Initialize()
@@ -119,7 +114,6 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
         /// <summary>
         /// Unregister a <see href="https://docs.unity3d.com/ScriptReference/GameObject.html">GameObject</see> from listening to Teleport events.
         /// </summary>
-        /// <param name="listener"></param>
         public override void Register(GameObject listener)
         {
             base.Register(listener);
@@ -128,7 +122,6 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
         /// <summary>
         /// Unregister a <see href="https://docs.unity3d.com/ScriptReference/GameObject.html">GameObject</see> from listening to Teleport events.
         /// </summary>
-        /// <param name="listener"></param>
         public override void Unregister(GameObject listener)
         {
             base.Unregister(listener);
@@ -137,12 +130,6 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
         #endregion IEventSystemManager Implementation
 
         #region IMixedRealityTeleportSystem Implementation
-
-        /// <summary>
-        /// The transform of the playspace scene object.
-        /// </summary>
-        private Transform Playspace = null;
-
         /// <summary>
         /// Is there an input system registered.
         /// </summary>
@@ -262,8 +249,6 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
         {
             isProcessingTeleportRequest = true;
 
-            var cameraParent = Playspace;
-
             targetRotation = Vector3.zero;
             var teleportPointer = eventData.Pointer as IMixedRealityTeleportPointer;
             if (teleportPointer != null)
@@ -283,11 +268,14 @@ namespace Microsoft.MixedReality.Toolkit.Teleport
             }
 
             float height = targetPosition.y;
-            targetPosition -= CameraCache.Main.transform.position - cameraParent.position;
+            targetPosition -= CameraCache.Main.transform.position - MixedRealityPlayspace.Position;
             targetPosition.y = height;
-            cameraParent.position = targetPosition;
 
-            cameraParent.RotateAround(CameraCache.Main.transform.position, Vector3.up, targetRotation.y - CameraCache.Main.transform.eulerAngles.y);
+            MixedRealityPlayspace.Position = targetPosition;
+            MixedRealityPlayspace.RotateAround(
+                        CameraCache.Main.transform.position, 
+                        Vector3.up, 
+                        targetRotation.y - CameraCache.Main.transform.eulerAngles.y);
 
             isProcessingTeleportRequest = false;
 

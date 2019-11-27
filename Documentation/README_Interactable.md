@@ -1,285 +1,356 @@
 # Interactable
-![Interactable](../External/ReadMeImages/Interactable/InteractableExamples.png)
 
-## How to use Interactable
-Add the Interactable Component to a GameObject
+![Interactable](../Documentation/Images/Interactable/InteractableExamples.png)
 
-![Interactable](../External/ReadMeImages/Interactable/InteractableInspector_basicSteps.png)
+The [`Interactable`](xref:Microsoft.MixedReality.Toolkit.UI.Interactable) component is an all-in-one container to make any object easily *interactable* and responsive to input. Interactable acts as a catch-all for all types of input including touch, hand rays, speech etc and funnel these interactions into [events](#events) and [visual theme](visualthemes.md) responses. This component provides an easy way to make buttons, change color on objects with focus, and more.
 
-1. A Collider must exist on the GameObject with the Interactable or the child of the Interactable for it to receive input.
-2. Use the OnClick event to make something happen.
-3. Add visual feedback by linking a Target to a Profile and assigning a Theme.
+## How to configure Interactable
 
+The component allows for three primary sections of configuration:
 
-## Input Settings
-The basic features allow for button style interactions, such as pointer focus and clicks, that maps to interaction states to drive themes which are setup through the Interactable profile. Controller or hand focus, down, up and click (both near and far) are handled. Functionality can be extended using external scripts that can set state manually.
+1) [General input configuration](#general-input-settings)
+1) [Visual Themes](VisualThemes.md) targeted against multiple GameObjects
+1) [Event handlers](#events)
 
-<img src="../External/ReadMeImages/Interactable/InputFeatures_short.png" width="450">
+### General input settings
 
-### Input Actions
-Select the action, from the input configuration or controller mapping profile, that the Interactable should react to.
-See the InputProfile or the DefaultMixedRealityInputActionsProfile for more on how Input Actions are setup and intended to be used in the application.
- 
-### Enabled
-Sets the Interactable's enabled state, which will disable some input handling and update the themes to reflect the current state which is disabled.
-This is different from disabling input all together (using Enable Input) This means we have a button that would normally be interactive, but at this moment it is disabled (could be like a submit button waiting for all the required fields to be completed) and has a visual look and feel to denote it's disabled state.
- 
-### IsGlobal
-Focus is not required to detect input actions, default behavior is false.
- 
-### Voice Commands
-A voice command to trigger an OnClick event. This will also trigger a quick state change to drive any themes visuals.
- 
-Note: Make sure there is a unique voice command on each button. The Voice Recognizer is global (even if the Interactable isn't) and will not register the same voice command twice; in this case an error will be thrown.
- 
-### Requires Gaze (Only available when the Voice Command field has a value)
-The voice command requires the Interactable to have focus to listen for the voice command.
-- There are several ways to use voice commands to trigger an interactable, be careful not to have multiple objects with the same voice command or there will be conflicts.
-- Using the MRTK voice recognition profile or online speech service are other ways to enable voice commands.
+![General Interactable Settings](Images/Interactable/InputFeatures_short.png)
 
-**Dev Tip**: Interactable Features can be extended using external components like PhysicalPressEventRouter which enables press events to drive some state changes in Interactable.
+**States**
 
-## Example Scene
-See demonstrations of Interactable in the InteractableExamples scene.
-More examples can also be found in the HandInteractionExamples scene.
+*States* is a [ScriptableObject](https://docs.unity3d.com/Manual/class-ScriptableObject.html) parameter that defines the interactions phases, like press or observed, for [Interactable Profiles](#interactable-profiles) and [Visual Themes](VisualThemes.md).
 
-## Profiles and Themes
+The [**DefaultInteractableStates**](https://github.com/microsoft/MixedRealityToolkit-Unity/tree/mrtk_release/Assets/MixedRealityToolkit.SDK/Features/UX/Interactable/States/DefaultInteractableStates.asset) ships with MRTK out-of-box and is the default parameter for *Interactable* components.
 
-The profile will define how button content will be linked to and manipulated by themes, based on state changes.
+![States ScriptableObject example in inspector](Images/Interactable/DefaultInteractableStates.png)
 
-<img src="../External/ReadMeImages/Interactable/Profiles_noTarget.png" width="450">
+The *DefaultInteractableStates* asset contains four states and utilizes the [`InteractableStates`](xref:Microsoft.MixedReality.Toolkit.UI.InteractableStates) state model implementation.
 
+* **Default**: Nothing is happening, this is the most isolated base state.
 
+* **Focus**: The object is being pointed at. This is a single state, no other states are currently set, but it will out rank Default.
 
-Themes work a lot like Materials, they are ScriptableObjects that contain a list of data that will be assigned to an object based on the current state. Like Materials, they can be edited individually in the Project panel or through the Interactable profile. Editing a Theme through an Interactable will update its settings for all other Interactables using that theme. Themes can be extended to control any aspect of a GameObject with a few basic themes provided that can change color, scale, position or an combination of the three.
+* **Press**: The object is being pointed at and a button or hand is pressing. The Press state out ranks Default and Focus. This state will also get set as a fallback to Physical Press.
 
-<img src="../External/ReadMeImages/Interactable/DefaultTheme_button.png" width="450">
-
-
-### Default Themes
-A default theme will be provided whenever an target object is added to a profile. It is not advised to edit the default theme, like in the case MRTK is updated, the theme could get overridden. A create Theme button is provided whenever the default theme is used to make it easier to create a new themes. 
-
-<img src="../External/ReadMeImages/Interactable/DefaultTheme_values.png" width="450">
-
-
-Example of the Default Theme.
-
-<img src="../External/ReadMeImages/Interactable/Theme.png" width="450">
-
-Example of a Color Theme
-
-The best way to save a profile of a button, with all the themes and targets setup, is to create a prefab of your button.
-_Note: Themes that effect mesh objects (Color or Shader Themes) are able to detect the shader properties in the material assigned to the target object. A drop down list of shader properties will define how the values of the theme are applied and is a convenience of this ability. Conflicts can arise if the same theme is used on objects that do not share the same material shader setting. Best practice is to create a separate theme for objects with different shaders; this is not an issue when using the same Color Theme on a text object and a mesh object, because all the shader properties are ignored on text objects._
-
-### Creating Toggles
-Toggle or multi-step buttons can be created in the Profile using the Dimensions field. The idea is that each set of states can have multiple dimensions and in this case, when the Dimensions value is increased, slots for additional themes are provided for each item in the Profile. This allows for a Normal Theme and a Toggled Theme to be used depending if the Interactable is toggled or not. 
-
-<img src="../External/ReadMeImages/Interactable/Profile_toggle.png" width="450">
-
-
-With Dimensions being a numeric value, the options for adding themes or steps is endless. An example of a multi-step button with 3 dimensions is one that controls speed. We may only want to have the option for 3 values, Fast (1x), Faster (2x) or Fastest (3x). Using Dimensions we could control the text or texture of the button for each step using 3 different themes. **Developers can assess the DimensionIndex to determine which dimension is currently active.**
-
-
-## Events
-You can use Interactable to detect input events other than just OnClick. The Events feature provides a way to enable functionality to extend a button, but not really visual or needed to provide feedback based on state changes.
-
-<img src="../External/ReadMeImages/Interactable/Events.png" width="450">
-
-
-
-At the bottom of the Interactable component, click the Add Event button to reveal additional event options. A drop down menu contains the current list of supported events like toggle, hold or double tap. The idea of these events is to monitor Interactable state changes and define patterns to detect. When a pattern is detected, we can make something happen through the inspector or directly in code.
-
-<img src="../External/ReadMeImages/Interactable/Event_audioClip.png" width="450">
-
-Example of audio clip to play on click. There is an Audio Theme for playing audio clips for each state change, like focus.
-
-<img src="../External/ReadMeImages/Interactable/Event_toggle.png" width="450">
-
-
-Example of Toggle events
-
-<img src="../External/ReadMeImages/Interactable/Event_hold.png" width="450">
-
-Example of a hold event
-
-Events can be placed on an object to monitor a separate Interactable. Use InteractableReceiver for a single event (from the list) or InteractableReceiverList for a list of events similar to the Interactable event list.
-
-<img src="../External/ReadMeImages/Interactable/InteractableReceiver.png" width="450">
-
-Example of InteractableReceiver existing on a separate gameObject from the Interactable, referencing the Interactable for event and state updates.
-Search Scope provides a preferred path to search for an Interactable if one is not explicitly assigned.
-
-## States
-States are a list of terms that can be used to define interactions phases, like press or observed.
-
-<img src="../External/ReadMeImages/Interactable/DefaultStates.png" width="450">
-
-Interactable States provides two major roles.
-- Establish a list of states that we care about. This list will be displayed in the themes and can also be referenced by the events.
-- Controls how different interaction phases are ranked into states. For instance, a press state is also in a focused state, but the InteractableStates class will define it is a press state based on the ranking preferences setup in the State ScriptableObject.
-
-<img src="../External/ReadMeImages/Interactable/StatesScriptableObject.png" width="450">
-
-
-The InteractableStates State Model will handle any state list with a layered ranking system, starting with the most isolated state and ending with the state that could contain all other states.
-
-The DefaultInteractableStates list contains 4 states
-- Default - nothing is happening, this is the most isolated base state. If anything does happen, it should over rule this state.
-- Focus - the object is being pointed at. This is a single state, no other states are currently set, but it will out rank Default.
-- Press - the object is being pointed at and a button or hand is pressing. The Press state out ranks Default and Focus.
-- Disabled - the button should not be interactive and visual feedback will let the user know for some reason this button is not usable at this time. In theory, the disabled state could contain all other states, but when Enabled is turned off, the Disabled state trumps all other states.
+* **Disabled**: The button should not be interactive and visual feedback will let the user know for some reason this button is not usable at this time. In theory, the disabled state could contain all other states, but when Enabled is turned off, the Disabled state trumps all other states.
 
 A bit value (#) is assigned to the state depending on the order in the list.
 
+> [!NOTE]
+> It is generally recommended to utilize the [**DefaultInteractableStates**](https://github.com/microsoft/MixedRealityToolkit-Unity/tree/mrtk_release/Assets/MixedRealityToolkit.SDK/Features/UX/Interactable/States/DefaultInteractableStates.asset) when creating *Interactable* components.
+>
+> However, there are 17 Interactable states available that can be used to drive themes, though some are meant to be driven by other components. Here is a list of those with built-in functionality.
+>
+> * Visited: the Interactable has been clicked.
+> * Toggled: The button is in a toggled state or Dimension index is an odd number.
+> * Gesture: The hand or controller was pressed and has moved from the original position.
+> * VoiceCommand: A speech command was used to trigger the Interactable.
+> * PhysicalTouch: A touch input is currently detected, use [`NearInteractionTouchable`](xref:Microsoft.MixedReality.Toolkit.Input.NearInteractionTouchable) to enable.
+> * Grab: A hand is currently grabbing in the bounds of the object, use [`NearInteractionGrabbable`](xref:Microsoft.MixedReality.Toolkit.Input.NearInteractionGrabbable) to enable
 
-## Extending Themes
-Extend InteractableThemeBase to create a new theme that will show up in the Theme Property drop-down list. Themes can be created to control anything based on state changes. We could have a custom component on a GameObject that is driven by a custom theme with the values for each state being set in the inspector.
+**Enabled**
 
-Setup the configuration of the theme settings in the constructor.
+Toggles whether an Interactable will start enabled or not. This corresponds to the [`Interactable.IsEnabled`](xref:Microsoft.MixedReality.Toolkit.UI.Interactable.IsEnabled) in code.
 
-```
-public NewCustomTheme()
+An *Interactable's* enabled property is different than the enabled property configured via GameObject/Component (i.e SetActive etc). Disabling the GameObject or *Interactable* MonoBehavior will disable everything in the class from running including input, visual themes, events, etc. Disabling via [`Interactable.IsEnabled`](xref:Microsoft.MixedReality.Toolkit.UI.Interactable.IsEnabled) will disable most input handling, reseting related input states. However, the class will still run every frame and receive input events which will be ignored. This is useful for displaying the Interactable in a disabled state which can be done via Visual Themes. A typical example of this would be a submit button waiting for all the required input fields to be completed.
+
+**Input Actions**
+
+Select the [input action](./Input/InputActions.md), from the input configuration or controller mapping profile, that the *Interactable* component should react to.
+
+This property can be configured at runtime in code via [`Interactable.InputAction`](xref:Microsoft.MixedReality.Toolkit.UI.Interactable.InputAction).
+
+**IsGlobal**
+
+If true, this will mark the component as a global input listener for the selected [input action](./Input/InputActions.md). Default behavior is false which will restrict input to only this *Interactable* collider/GameObject.
+
+This property can be configured at runtime in code via [`Interactable.IsGlobal`](xref:Microsoft.MixedReality.Toolkit.UI.Interactable.IsGlobal).
+
+**Speech Command**
+
+[Speech command](./Input/Speech.md), from the MRTK Speech Commands Profile, to trigger an OnClick event for voice interaction.
+
+This property can be configured at runtime in code via [`Interactable.VoiceCommand`](xref:Microsoft.MixedReality.Toolkit.UI.Interactable.VoiceCommand).
+
+**Requires Focus**
+
+If true, the voice command will only activate the *Interactable* if and only if it already has focus from a pointer. If false, then the *Interactable* will act as a global listener for the selected voice command. The default behavior is true, as multiple global speech listeners can be difficult to organize in a scene.
+
+This property can be configured at runtime in code via [`Interactable.VoiceRequiresFocus`](xref:Microsoft.MixedReality.Toolkit.UI.Interactable.VoiceRequiresFocus).
+
+**Selection Mode**
+
+This property defines the selection logic. When an *Interactable* is clicked, it iterates into a next *Dimension* level. *Dimensions* is similar to rank and defines a state outside of inputs (i.e focus, press etc). They are useful for defining Toggle states or other multi-rank states associated with a button. The current Dimension level is tracked by `Interactable.DimensionIndex`.
+
+The selection modes available are:
+
+* **Button** - *Dimensions* = 1, simple clickable *Interactable*
+* **Toggle** - *Dimensions* = 2, *Interactable* alternates between *on*/*off* state
+* **Multi-dimension** - *Dimensions* >= 3, every click increases the current dimension level + 1. Useful for defining a button state to a list, etc.
+
+*Interactable* also allows for multiple Themes to be defined per *Dimension*. For example when *SelectionMode=Toggle*, one theme may be applied when the *Interactable* is *deselected* and another theme applied when the component is *selected*.
+
+The current Selection Mode can be queried at runtime via [`Interactable.ButtonMode`](xref:Microsoft.MixedReality.Toolkit.UI.Interactable.ButtonMode). Updating the mode at runtime can be achieved by setting the  [`Interactable.Dimensions`](xref:Microsoft.MixedReality.Toolkit.UI.Interactable.Dimensions) property to match the desired functionality. Furthermore, the current dimension, useful for *Toggle* and *Multi-Dimension* modes, can be accessed via [`Interactable.CurrentDimension`](xref:Microsoft.MixedReality.Toolkit.UI.Interactable.CurrentDimension).
+
+### Interactable Profiles
+
+*Profiles* are items that create a relationship between a GameObject and a [Visual Theme](VisualThemes.md). The profile defines what content will be manipulated by a theme when a [state change occurs](#general-input-settings).
+
+Themes work a lot like materials. They are scriptable objects that contain a list of properties that will be assigned to an object based on the current state. Themes are also re-usable and can be assigned across multiple *Interactable* UX objects.
+
+![Interactable Profiles](Images/Interactable/Profiles_Themes.png)
+
+## Events
+
+Every *Interactable* component has an *OnClick* event that fires when the component is simply selected. However, *Interactable* can be used to detect input events other than just *OnClick*.
+
+Click the *Add Event* button to add a new type of Event Receiver definition. Once added, select the type of Event desired.
+
+![Events example](Images/Interactable/Events.png))
+
+There are different types of event receivers to respond to different types of input. MRTK ships with the following set of receivers out-of-box.
+
+* [`InteractableAudioReceiver`](xref:Microsoft.MixedReality.Toolkit.UI.InteractableAudioReceiver)
+* [`InteractableOnClickReceiver`](xref:Microsoft.MixedReality.Toolkit.UI.InteractableOnClickReceiver)
+* [`InteractableOnFocusReceiver`](xref:Microsoft.MixedReality.Toolkit.UI.InteractableOnFocusReceiver)
+* [`InteractableOnGrabReceiver`](xref:Microsoft.MixedReality.Toolkit.UI.InteractableOnGrabReceiver)
+* [`InteractableOnHoldReceiver`](xref:Microsoft.MixedReality.Toolkit.UI.InteractableOnHoldReceiver)
+* [`InteractableOnPressReceiver`](xref:Microsoft.MixedReality.Toolkit.UI.InteractableOnPressReceiver)
+* [`InteractableOnToggleReceiver`](xref:Microsoft.MixedReality.Toolkit.UI.InteractableOnToggleReceiver)
+* [`InteractableOnTouchReceiver`](xref:Microsoft.MixedReality.Toolkit.UI.InteractableOnTouchReceiver)
+
+A custom receiver can be created by making a new class that extends [`ReceiverBase`](xref:Microsoft.MixedReality.Toolkit.UI.ReceiverBase).
+
+![Event Toggle Receiver Example](Images/Interactable/Event_toggle.png)
+
+*Example of a Toggle Event Receiver*
+
+### Interactable Receivers
+
+ The [`InteractableReceiver`](xref:Microsoft.MixedReality.Toolkit.UI.InteractableReceiver) component allows for events to be defined outside of the source *Interactable* component. The *InteractableReceiver* will listen for a filtered event type fired by another *Interactable*. If the *Interactable* property is not directly assigned, then the *Search Scope* property defines the direction the *InteractableReceiver* listens for events which is either on it's self, in a parent, or in a child GameObject.
+
+[`InteractableReceiverList`](xref:Microsoft.MixedReality.Toolkit.UI.InteractableReceiverList) acts in a similar fashion but for a list of matching events.
+
+<img src="../Documentation/Images/Interactable/InteractableReceiver.png" width="450">
+
+### Create custom events
+
+Like [Visual Themes](VisualThemes.md#custom-theme-engines), events can be extended to detect any state pattern or to expose functionality.
+
+Custom events can be created in two main ways:
+
+1) Extend the [`ReceiverBase`](xref:Microsoft.MixedReality.Toolkit.UI.ReceiverBase) class to create a custom event that will show up in the dropdown list of event types. A Unity event is provided by default, but additional Unity events can be added or the event can be set to hide Unity events. This functionality allows a designer to work with an engineer on a project to create a custom event that the designer can setup in the editor.
+
+1) Extend the [`ReceiverBaseMonoBehavior`](xref:Microsoft.MixedReality.Toolkit.UI.ReceiverBaseMonoBehavior) class to create a completely custom event component that can reside on the *Interactable* or another object. The [`ReceiverBaseMonoBehavior`](xref:Microsoft.MixedReality.Toolkit.UI.ReceiverBaseMonoBehavior) will reference the *Interactable* to detect state changes.
+
+#### Example of extending `ReceiverBase`
+
+The [`CustomInteractablesReceiver`](xref:Microsoft.MixedReality.Toolkit.UI) class under `MixedRealityToolkit.Examples` displays status information about an *Interactable* and is an example how to create a custom Event Receiver.
+
+``` csharp
+public CustomInteractablesReceiver(UnityEvent ev) : base(ev, "CustomEvent")
 {
-    Types = new Type[] { typeof(Transform) };
-    Name = "Custom Theme Scale";
-    ThemeProperties.Add(
-        new InteractableThemeProperty()
-        {
-            Name = "Scale",
-            Type = InteractableThemePropertyValueTypes.Vector3,
-            Values = new List<InteractableThemePropertyValue>(),
-            Default = new InteractableThemePropertyValue() { Vector3 = Vector3.one}
-        });
-}
-```
-
-- Name -  the display name of the property, this will display next to the property field under each state title
-- Types - allow filtering based on components on the object. In this case, this theme will show up in the list when assigned to an object with a Transform
-- Name - the name that will show up in the inspector
-- ThemeProperties - a list of properties that theme will store to be used when the state changes.
-
-Each Theme Property has a name, type (so we know what type of fields we want to display for each state), a set of values for each state and a default value for the fields.
-We can also choose to hide the state fields in the inspector, if the theme does not need them.
-
-Override Init to run any startup code, that needs references to the Host GameObject.
-
-```
-public override InteractableThemePropertyValue GetProperty(InteractableThemeProperty property)
-{
-    InteractableThemePropertyValue start = new InteractableThemePropertyValue();
-    start.Vector3 = Host.transform.localScale;
-    return start;
-}
-```
-
-GetProperty should grab the current property of the Host. This will be used for animation later.
-Property is provided in case the current value depends on a cached property value. In this case we are grabbing the current scale.
-
-```
-public override void SetValue(InteractableThemeProperty property, int index, float percentage)
-{
-    Host.transform.localScale = Vector3.Lerp(property.StartValue.Vector3, property.Values[index].Vector3, percentage);
-}
-```
-
-The SetValue function is used to set the property value based on the current state.
-- Property - a list of property values per state, set through the theme inspector.
-- Index - correlates to the current state.
-- Percentage - a float value between 0 and 1. It will be the eased value if an Animation curve is used.
-
-Custom Settings added to the new class will also be displayed in the inspector. If there are properties that need to be exposed in the inspector but do not need to be based on states, they should be added to the Custom Settings list.
-
-
-# Extending Events
-Like Themes, events can be extended to detect any state pattern or to expose functionality. 
-
-Custom events can be created and used in two main ways
-- Extend ReceiverBase to create a custom event that will show up in the dropdown list of event types. A Unity Event is provided by default, but additional Unity Events can be added or the event can be set to hide UnityEvents.
-This functionality allows a designer to work with an engineer on a project to create a custom event that the designer or implementer to setup in the editor.
-- Extend ReceiverBaseMonoBehavior to create a completely custom event component that can reside on the Interactable or another object. The ReceiverBaseMonoBehavior will reference the Interactable to detect state changes.
-This approach is the most direct for engineers that do not want to work through the inspector.
-
-### Option 1: Extend ReceiverBase
-MixedRealityToolkit.Examples contains an example extension of ReceiverBase to display status information about the Interactable.
-
-```
-public CustomInteractablesReceiver(UnityEvent ev) : base(ev)
-{
-    Name = "CustomEvent";
     HideUnityEvents = true; // hides Unity events in the receiver - meant to be code only
 }
 ```
 
-**OnUpdate** is an abstract method that can be used to detect patterns. Here is an example of accessing all the states of the Interactable.
-Though there is a definite state that is defined with state.CurrentState(), the state object has a reference to all other states and their values.
+The following methods are useful to override/implement when creating a custom Event Receiver. [`ReceiverBase.OnUpdate()`](xref:Microsoft.MixedReality.Toolkit.UI.ReceiverBase) is an abstract method that can be used to detect state patterns/transitions. Furthermore, the [`ReceiverBase.OnVoiceCommand()`](xref:Microsoft.MixedReality.Toolkit.UI.ReceiverBase) and [`ReceiverBase.OnClick()`](xref:Microsoft.MixedReality.Toolkit.UI.ReceiverBase) methods are useful for creating custom event logic when the *Interactable* is selected.
 
-```
+``` csharp
 public override void OnUpdate(InteractableStates state, Interactable source)
 {
     if (state.CurrentState() != lastState)
     {
         // the state has changed, do something new
-        /*
-            bool hasDown = state.GetState(InteractableStates.InteractableStateEnum.Pressed).Value > 0;
-            bool focused = state.GetState(InteractableStates.InteractableStateEnum.Focus).Value > 0;
-            bool isDisabled = state.GetState(InteractableStates.InteractableStateEnum.Disabled).Value > 0;
-            bool hasInteractive = state.GetState(InteractableStates.InteractableStateEnum.Interactive).Value > 0;
-            bool hasObservation = state.GetState(InteractableStates.InteractableStateEnum.Observation).Value > 0;
-            bool hasObservationTargeted = state.GetState(InteractableStates.InteractableStateEnum.ObservationTargeted).Value > 0;
-            bool isTargeted = state.GetState(InteractableStates.InteractableStateEnum.Targeted).Value > 0;
-            bool isToggled = state.GetState(InteractableStates.InteractableStateEnum.Toggled).Value > 0;
-            bool isVisited = state.GetState(InteractableStates.InteractableStateEnum.Visited).Value > 0;
-            bool isDefault = state.GetState(InteractableStates.InteractableStateEnum.Default).Value > 0;
-            bool hasGesture = state.GetState(InteractableStates.InteractableStateEnum.Gesture).Value > 0;
-            bool hasGestureMax = state.GetState(InteractableStates.InteractableStateEnum.GestureMax).Value > 0;
-            bool hasCollision = state.GetState(InteractableStates.InteractableStateEnum.Collision).Value > 0;
-            bool hasPhysicalTouch = state.GetState(InteractableStates.InteractableStateEnum.PhysicalTouch).Value > 0;
-            bool hasCustom = state.GetState(InteractableStates.InteractableStateEnum.Custom).Value > 0;
-            or:
-            bool hasFocus = source.HasFocus;
-            bool hasPress = source.HasPress;
-        */
         lastState = state.CurrentState();
-        SetOutput();
+        ...
     }
 }
-```
 
-Two Interactable event methods are also available if driving functionality from OnClick or OnVoiceCommand is needed.
-
-```
-public virtual void OnVoiceCommand(InteractableStates state, Interactable source, string command, int index = 0, int length = 1)
+public virtual void OnVoiceCommand(InteractableStates state, Interactable source,
+                                    string command, int index = 0, int length = 1)
 {
-    // voice command called
+    base.OnVoiceCommand(state, source, command, index, length);
+    // voice command called, perform some action
 }  
-public virtual void OnClick(InteractableStates state, Interactable source, IMixedRealityPointer pointer = null)
+
+public virtual void OnClick(InteractableStates state,
+                            Interactable source,
+                            IMixedRealityPointer pointer = null)
 {
-    // click called
+    base.OnClick(state, source);
+    // click called, perform some action
 }
 ```
 
-## Extending States
-The functionality of how states are ranked can be overridden by extending InteractableStates class.
+##### Displaying custom Event Receiver fields in the inspector
 
-Override the CompareStates method to manually control the ranking.
+*ReceiverBase* scripts use [`InspectorField`](xref:Microsoft.MixedReality.Toolkit.Utilities.Editor.InspectorField) attributes to expose custom properties in the inspector. Here's an example of Vector3 a custom property with tooltip and label information. This property will show up as configurable in the inspector when an *Interactable* GameObject is selected and has the associated *Event Receiver* type added.
 
+```csharp
+[InspectorField(Label = "<Property label>",Tooltip = "<Insert tooltip info>",Type = InspectorField.FieldTypes.Vector3)]
+public Vector3 EffectOffset = Vector3.zero;
 ```
-public override State CompareStates()
+
+## How to use Interactable
+
+### Building a simple button
+
+One can create a simple button by simply adding the *Interactable* component to a GameObject that is configured to receive input events. It can have  has a collider on it or on a child to receive input. If using *Interactable* with a Unity UI based GameObjects it should be under the Canvas GameObject.
+
+Take the button one step further, by creating a new profile, assigning the GameObject itself and creating a new theme. Furthermore, use the *OnClick* event to make something happen.
+
+> [!NOTE]
+> Making a [button pressable](README_Button.md) requires the`PressableButton` component. Additionally, the `PhysicalPressEventRouter` component is needed to funnel press events to the *Interactable* component.
+
+### Creating Toggle and Multi-Dimension buttons
+
+#### Toggle button
+
+To make a button Toggle-able, change the the [`Selection Mode`](xref:Microsoft.MixedReality.Toolkit.UI.SelectionModes) field to type `Toggle`. In the *Profiles* section, a new toggled theme is added for each profile that is used when the *Interactable* is toggled on.
+
+While the [`SelectionMode`](xref:Microsoft.MixedReality.Toolkit.UI.SelectionModes) is set to Toggle, the *IsToggled* check box can be used to set the default value of the control at runtime initialization.
+
+*CanSelect* means the the *Interactable* can go from *off* to *on* while the *CanDeselect* means the inverse.
+
+![Profile Toggle Visual Themes Example](Images/Interactable/Profile_toggle.png)
+
+Developers can utilize the [`SetToggled`](xref:Microsoft.MixedReality.Toolkit.UI.Interactable) and [`IsToggled`](xref:Microsoft.MixedReality.Toolkit.UI.Interactable) interfaces to get/set the toggle state of an *Interactable* via code.
+
+```csharp
+// If using SelectionMode = Toggle (i.e Dimensions == 2)
+
+// Make the Interactable selected and toggled on
+myInteractable.IsToggled = true;
+
+// Get whether the Interactable is selected or not
+bool isSelected = myInteractable.IsToggled;
+```
+
+##### Toggle button collection
+
+It is common to have a list of toggle buttons where only one can be active at any given time, also known as a radial set or radio buttons etc.
+
+Use the [`InteractableToggleCollection`](xref:Microsoft.MixedReality.Toolkit.UI.InteractableToggleCollection) component to enable this functionality. This control ensures only one *Interactable* is toggled on at any given time. The [*RadialSet* prefab](https://github.com/microsoft/MixedRealityToolkit-Unity/tree/mrtk_release/Assets/MixedRealityToolkit.SDK/Features/UX/Interactable/Prefabs/RadialSet.prefab) is also a great starting point out-of-box.
+
+To create a custom radial button group:
+
+1) Create multiple *Interactable* GameObjects/buttons
+1) Set each *Interactable* with *SelectionMode* = Toggle, *CanSelect* = true, and *CanDeselect* = false
+1) Create an empty parent GameObject over all the *Interactables* and add the *InteractableToggleCollection* component
+1) Add all *Interactables* to the *ToggleList* on the *InteractableToggleCollection*
+1) Set the *InteractableToggleCollection.CurrentIndex* property to determine which button is selected by default at start
+
+<img src="../Documentation/Images/Interactable/InteractableToggleCollection.png" width="450">
+
+#### Multi-Dimensional button
+
+Multi-Dimension selection mode is used to create sequential buttons, or a button that has more than two steps, like controlling speed with three values, Fast (1x), Faster (2x) or Fastest (3x).
+
+With dimensions being a numeric value, up to 9 themes can be added to control the text label or texture of the button for each speed setting, using a different theme for each of step.
+
+Every click event will advance the `DimensionIndex` by 1 at runtime until the `Dimensions` value is reached then the cycle will reset to 0.
+
+![Multi-Dimensional profile example](Images/Interactable/Profile_multiDimensions.png)
+
+Developers can assess the [`DimensionIndex`](xref:Microsoft.MixedReality.Toolkit.UI.Interactable) to determine which dimension is currently active.
+
+```csharp
+// If using SelectionMode = Multi-dimension (i.e Dimensions >= 3)
+
+//Access the current DimensionIndex
+int currentDimension = myInteractable.CurrentDimension;
+
+//Set the current DimensionIndex to 2
+myInteractable.CurrentDimension = 2;
+
+// Promote Dimension to next level
+myInteractable.IncreaseDimension();
+```
+
+### Create Interactable at runtime
+
+*Interactable* can be easily added to any GameObject at runtime. The following example demonstrates how to assign a profile with a [visual theme](visualthemes.md).
+
+```csharp
+var interactableObject = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+var interactable = interactableObject.AddComponent<Interactable>();
+
+// Get the default configuration for the Theme engine InteractableColorTheme
+var newThemeType = ThemeDefinition.GetDefaultThemeDefinition<InteractableColorTheme>().Value;
+
+// Define a color for every state in our Default Interactable States
+newThemeType.StateProperties[0].Values = new List<ThemePropertyValue>()
 {
-    int bit = GetBit();
-    currentState = stateList[0];
-    for (int i = stateList.Count - 1; i > -1; i--)
+    new ThemePropertyValue() { Color = Color.black},  // Default
+    new ThemePropertyValue() { Color = Color.black}, // Focus
+    new ThemePropertyValue() { Color = Random.ColorHSV()},   // Pressed
+    new ThemePropertyValue() { Color = Color.black},   // Disabled
+};
+
+interactable.Profiles = new List<InteractableProfileItem>()
+{
+    new InteractableProfileItem()
     {
-        if (bit >= stateList[i].Bit)
+        Themes = new List<Theme>()
         {
-            currentState = stateList[i];
-            break;
-        }
-    }
-    return currentState;
+            Interactable.GetDefaultThemeAsset(new List<ThemeDefinition>() { newThemeType })
+        },
+        Target = interactableObject,
+    },
+};
+
+// Force the Interactable to be clicked
+interactable.TriggerOnClick()
+```
+
+### Interactable Events via code
+
+One can add an action to the base [`Interactable.OnClick`](xref:Microsoft.MixedReality.Toolkit.UI.Interactable.OnClick) event via code with the following example.
+
+```csharp
+public static void AddOnClick(Interactable interactable)
+{
+    interactable.OnClick.AddListener(() => Debug.Log("Interactable clicked"));
 }
 ```
 
+Use the [`Interactable.AddReceiver<T>()`](xref:Microsoft.MixedReality.Toolkit.UI.Interactable) function to add event receivers dynamically at runtime.
 
+The example code below demonstrates how to add an [InteractableOnFocusReceiver](xref:Microsoft.MixedReality.Toolkit.UI.InteractableOnFocusReceiver), which listens for focus enter/exit, and furthermore define action code to perform when the event instances fire.
 
+```csharp
+public static void AddFocusEvents(Interactable interactable)
+{
+    var onFocusReceiver = interactable.AddReceiver<InteractableOnFocusReceiver>();
 
+    onFocusReceiver.OnFocusOn.AddListener(() => Debug.Log("Focus on"));
+    onFocusReceiver.OnFocusOff.AddListener(() => Debug.Log("Focus off"));
+}
+```
+
+The example code below demonstrates how to add an [InteractableOnToggleReceiver](xref:Microsoft.MixedReality.Toolkit.UI.InteractableOnFocusReceiver), which listens for selected/deselected state transitions on toggle-able *Interactables*, and furthermore define action code to perform when the event instances fire.
+
+```csharp
+public static void AddToggleEvents(Interactable interactable)
+{
+    var toggleReceiver = interactable.AddReceiver<InteractableOnToggleReceiver>();
+
+    // Make the interactable have toggle capability, from code.
+    // In the gui editor it's much easier
+    interactable.Dimensions = 2;
+    interactable.CanSelect = true;
+    interactable.CanDeselect  = true;
+
+    toggleReceiver.OnSelect.AddListener(() => Debug.Log("Toggle selected"));
+    toggleReceiver.OnDeselect.AddListener(() => Debug.Log("Toggle un-selected"));
+}
+```
+
+## See also
+
+* [Visual Themes](VisualThemes.md)
+* [Input Actions](./Input/InputActions.md)
+* [Speech Commands](./Input/Speech.md)
+* [Buttons](README_Button.md)
+* [MRTK Standard Shader](README_MRTKStandardShader.md)

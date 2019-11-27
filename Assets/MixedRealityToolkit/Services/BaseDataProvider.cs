@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-
 namespace Microsoft.MixedReality.Toolkit
 {
     /// <summary>
@@ -43,10 +42,5 @@ namespace Microsoft.MixedReality.Toolkit
         /// The service instance to which this provider is providing data.
         /// </summary>
         protected IMixedRealityService Service { get; set; } = null;
-
-        /// <summary>
-        /// Configuration Profile
-        /// </summary>
-        protected BaseMixedRealityProfile ConfigurationProfile { get; set; } = null;
     }
 }

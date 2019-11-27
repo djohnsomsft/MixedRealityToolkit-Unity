@@ -6,10 +6,16 @@ using UnityEngine;
 
 namespace Microsoft.MixedReality.Toolkit.Examples.Demos
 {
+    [System.Obsolete("This component is no longer supported", true)]
     public class DemoTouchButton : MonoBehaviour, IMixedRealityPointerHandler
     {
         [SerializeField]
         private TextMesh debugMessage = null;
+
+        private void Awake()
+        {
+            Debug.LogError(this.GetType().Name + " is deprecated");
+        }
 
         void IMixedRealityPointerHandler.OnPointerClicked(MixedRealityPointerEventData eventData) { }
 
@@ -21,6 +27,8 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos
                 Debug.Log(eventData.MixedRealityInputAction.Description + " down");
             }
         }
+
+        void IMixedRealityPointerHandler.OnPointerDragged(MixedRealityPointerEventData eventData) { }
 
         void IMixedRealityPointerHandler.OnPointerUp(MixedRealityPointerEventData eventData)
         {

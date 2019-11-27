@@ -210,7 +210,6 @@ namespace Microsoft.MixedReality.Toolkit
         /// Gets the hierarchical depth of the Transform from its root. Returns -1 if the transform is the root.
         /// </summary>
         /// <param name="t">The transform to get the depth for.</param>
-        /// <returns></returns>
         public static int GetDepth(this Transform t)
         {
             int depth = -1;
@@ -227,9 +226,9 @@ namespace Microsoft.MixedReality.Toolkit
         }
 
         /// <summary>
-        /// Trys to get the hierarchical depth of the Transform from the specified parent. This method is recursive.
+        /// Tries to get the hierarchical depth of the Transform from the specified parent. This method is recursive.
         /// </summary>
-        /// <param name="target">The transfrom to get the depth for</param>
+        /// <param name="target">The transform to get the depth for</param>
         /// <param name="parent">The starting transform to look for the target transform in</param>
         /// <param name="depth">The depth of the target transform</param>
         /// <returns>'true' if the depth could be retrieved, or 'false' because the transform is a root transform.</returns>

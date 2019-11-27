@@ -24,18 +24,7 @@ namespace Microsoft.MixedReality.Toolkit.Physics
             get { return scaleMultiplier; }
             set
             {
-                if (value > MaxScaleMultiplier)
-                {
-                    scaleMultiplier = MaxScaleMultiplier;
-                }
-                else if (value < MinScaleMultiplier)
-                {
-                    scaleMultiplier = MinScaleMultiplier;
-                }
-                else
-                {
-                    scaleMultiplier = value;
-                }
+                scaleMultiplier = Mathf.Clamp(value, MinScaleMultiplier, MinScaleMultiplier);
             }
         }
 
@@ -48,18 +37,7 @@ namespace Microsoft.MixedReality.Toolkit.Physics
             get { return speedMultiplier; }
             set
             {
-                if (value > MaxSpeedMultiplier)
-                {
-                    speedMultiplier = MaxSpeedMultiplier;
-                }
-                else if (value < MinSpeedMultiplier)
-                {
-                    speedMultiplier = MinSpeedMultiplier;
-                }
-                else
-                {
-                    speedMultiplier = value;
-                }
+                speedMultiplier = Mathf.Clamp(value, MinSpeedMultiplier, MaxSpeedMultiplier);
             }
         }
 
@@ -72,18 +50,7 @@ namespace Microsoft.MixedReality.Toolkit.Physics
             get { return strengthMultiplier; }
             set
             {
-                if (value > MaxStrengthMultiplier)
-                {
-                    strengthMultiplier = MaxStrengthMultiplier;
-                }
-                else if (value < MinStrengthMultiplier)
-                {
-                    strengthMultiplier = MinStrengthMultiplier;
-                }
-                else
-                {
-                    strengthMultiplier = value;
-                }
+                strengthMultiplier = Mathf.Clamp(value, MinStrengthMultiplier, MaxStrengthMultiplier);
             }
         }
 
@@ -114,6 +81,7 @@ namespace Microsoft.MixedReality.Toolkit.Physics
             set { axisOffset = value; }
         }
 
+        /// <inheritdoc />
         protected override Vector3 DistortPointInternal(Vector3 point, float strength)
         {
             Vector3 wiggly = point;
@@ -124,6 +92,7 @@ namespace Microsoft.MixedReality.Toolkit.Physics
             return point + (wiggly * strength);
         }
 
+        /// <inheritdoc />
         protected override Vector3 DistortScaleInternal(Vector3 point, float strength)
         {
             return point;

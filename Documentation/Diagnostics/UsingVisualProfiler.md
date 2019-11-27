@@ -9,11 +9,12 @@ The VisualProfiler provides an easy to use, in application view of a mixed reali
 
 While developing an application, be sure to focus on multiple parts of the scene as the Visual Profiler displays data relative to the current view. 
 
+> [!IMPORTANT]
 > Focus attention on portions of the scene with complex objects, particle effects or activity. These and other factors often contribute to reduction in application performance and a less than ideal user experience.
 
 ## Visual Profiler Interface
 
-![Visual Profiler Interface](../../External/ReadMeImages/Diagnostics/VisualProfiler.png)
+![Visual Profiler Interface](../../Documentation/Images/Diagnostics/VisualProfiler.png)
 
 The Visual Profiler interface includes the following components:
 
@@ -38,23 +39,23 @@ To the right of the frame rate is the frame time, in milliseconds, spent on the 
 - 60 fps: 16.6 ms
 - 90 fps: 11.1 ms
 
-> GPU time is planned to be added in a future release.
+GPU time is planned to be added in a future release.
 
 ### Frame Graph
 
 The frame graph provides a graphical display of the application frame rate history.
 
-![Visual Profiler Frame Graph](../../External/ReadMeImages/Diagnostics/VisualProfilerMissedFrames.png)
+![Visual Profiler Frame Graph](../../Documentation/Images/Diagnostics/VisualProfilerMissedFrames.png)
 
-> When using the application, look for missed frames. Missed frames indicate the application is not hitting its target frame rate and may need optimization work.
+When using the application, look for missed frames. Missed frames indicate the application is not hitting its target frame rate and may need optimization work.
 
 ### Memory Utilization
 
 The memory utilization display allows for easy understanding of how the current view is impacting an application's memory consumption. 
 
-![Visual Profiler Frame Graph](../../External/ReadMeImages/Diagnostics/VisualProfilerMemory.png)
+![Visual Profiler Frame Graph](../../Documentation/Images/Diagnostics/VisualProfilerMemory.png)
 
-> When using application, look for total memory usage. Key indicators include: nearing the memory limit and rapid changes in usage.
+When using application, look for total memory usage. Key indicators include: nearing the memory limit and rapid changes in usage.
 
 ## Customizing the Visual Profiler
 

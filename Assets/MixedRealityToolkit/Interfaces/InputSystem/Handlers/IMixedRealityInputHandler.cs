@@ -10,18 +10,16 @@ namespace Microsoft.MixedReality.Toolkit.Input
     /// <summary>
     /// Interface to implement for simple generic input.
     /// </summary>
-    public interface IMixedRealityInputHandler : IEventSystemHandler
+    public interface IMixedRealityInputHandler : IMixedRealityBaseInputHandler
     {
         /// <summary>
         /// Input Up updates from Interactions, Keys, or any other simple input.
         /// </summary>
-        /// <param name="eventData"></param>
         void OnInputUp(InputEventData eventData);
 
         /// <summary>
         /// Input Down updates from Interactions, Keys, or any other simple input.
         /// </summary>
-        /// <param name="eventData"></param>
         void OnInputDown(InputEventData eventData);
     }
 

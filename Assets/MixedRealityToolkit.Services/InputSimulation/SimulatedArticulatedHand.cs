@@ -24,10 +24,6 @@ namespace Microsoft.MixedReality.Toolkit.Input
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="trackingState"></param>
-        /// <param name="controllerHandedness"></param>
-        /// <param name="inputSource"></param>
-        /// <param name="interactions"></param>
         public SimulatedArticulatedHand(TrackingState trackingState, Handedness controllerHandedness, IMixedRealityInputSource inputSource = null, MixedRealityInteractionMapping[] interactions = null)
                 : base(trackingState, controllerHandedness, inputSource, interactions)
         {
@@ -46,11 +42,13 @@ namespace Microsoft.MixedReality.Toolkit.Input
             new MixedRealityInteractionMapping(4, "Index Finger Pose", AxisType.SixDof, DeviceInputType.IndexFinger, MixedRealityInputAction.None),
         };
 
+        /// <inheritdoc />
         public override void SetupDefaultInteractions(Handedness controllerHandedness)
         {
             AssignControllerMappings(DefaultInteractions);
         }
 
+        /// <inheritdoc />
         protected override void UpdateInteractions(SimulatedHandData handData)
         {
             lastPointerPose = currentPointerPose;
@@ -58,7 +56,7 @@ namespace Microsoft.MixedReality.Toolkit.Input
 
             // For convenience of simulating in Unity Editor, make the ray use the index
             // finger position instead of knuckle, since the index finger doesn't move when we press.
-            Vector3 pointerPosition = jointPositions[(int)TrackedHandJoint.IndexTip];
+            Vector3 pointerPosition = jointPoses[TrackedHandJoint.IndexTip].Position;
             IsPositionAvailable = IsRotationAvailable = pointerPosition != Vector3.zero;
 
             if (IsPositionAvailable)
@@ -70,26 +68,24 @@ namespace Microsoft.MixedReality.Toolkit.Input
                 currentPointerPose.Position = ray.origin;
                 currentPointerPose.Rotation = Quaternion.LookRotation(ray.direction);
 
-                currentGripPose.Position = jointPositions[(int)TrackedHandJoint.Palm];
-                currentGripPose.Rotation = jointOrientations[(int)TrackedHandJoint.Palm];
+                currentGripPose = jointPoses[TrackedHandJoint.Palm];
 
-                currentIndexPose.Position = jointPositions[(int)TrackedHandJoint.IndexTip];
-                currentIndexPose.Rotation = jointOrientations[(int)TrackedHandJoint.IndexTip];
+                currentIndexPose = jointPoses[TrackedHandJoint.IndexTip];
             }
 
             if (lastGripPose != currentGripPose)
             {
                 if (IsPositionAvailable && IsRotationAvailable)
                 {
-                    MixedRealityToolkit.InputSystem?.RaiseSourcePoseChanged(InputSource, this, currentGripPose);
+                    InputSystem?.RaiseSourcePoseChanged(InputSource, this, currentGripPose);
                 }
                 else if (IsPositionAvailable && !IsRotationAvailable)
                 {
-                    MixedRealityToolkit.InputSystem?.RaiseSourcePositionChanged(InputSource, this, currentPointerPosition);
+                    InputSystem?.RaiseSourcePositionChanged(InputSource, this, currentPointerPosition);
                 }
                 else if (!IsPositionAvailable && IsRotationAvailable)
                 {
-                    MixedRealityToolkit.InputSystem?.RaiseSourceRotationChanged(InputSource, this, currentPointerRotation);
+                    InputSystem?.RaiseSourceRotationChanged(InputSource, this, currentPointerRotation);
                 }
             }
 
@@ -101,14 +97,14 @@ namespace Microsoft.MixedReality.Toolkit.Input
                         Interactions[i].PoseData = currentPointerPose;
                         if (Interactions[i].Changed)
                         {
-                            MixedRealityToolkit.InputSystem?.RaisePoseInputChanged(InputSource, ControllerHandedness, Interactions[i].MixedRealityInputAction, currentPointerPose);
+                            InputSystem?.RaisePoseInputChanged(InputSource, ControllerHandedness, Interactions[i].MixedRealityInputAction, currentPointerPose);
                         }
                         break;
                     case DeviceInputType.SpatialGrip:
                         Interactions[i].PoseData = currentGripPose;
                         if (Interactions[i].Changed)
                         {
-                            MixedRealityToolkit.InputSystem?.RaisePoseInputChanged(InputSource, ControllerHandedness, Interactions[i].MixedRealityInputAction, currentGripPose);
+                            InputSystem?.RaisePoseInputChanged(InputSource, ControllerHandedness, Interactions[i].MixedRealityInputAction, currentGripPose);
                         }
                         break;
                     case DeviceInputType.Select:
@@ -118,11 +114,11 @@ namespace Microsoft.MixedReality.Toolkit.Input
                         {
                             if (Interactions[i].BoolData)
                             {
-                                MixedRealityToolkit.InputSystem?.RaiseOnInputDown(InputSource, ControllerHandedness, Interactions[i].MixedRealityInputAction);
+                                InputSystem?.RaiseOnInputDown(InputSource, ControllerHandedness, Interactions[i].MixedRealityInputAction);
                             }
                             else
                             {
-                                MixedRealityToolkit.InputSystem?.RaiseOnInputUp(InputSource, ControllerHandedness, Interactions[i].MixedRealityInputAction);
+                                InputSystem?.RaiseOnInputUp(InputSource, ControllerHandedness, Interactions[i].MixedRealityInputAction);
                             }
                         }
                         break;
@@ -133,11 +129,11 @@ namespace Microsoft.MixedReality.Toolkit.Input
                         {
                             if (Interactions[i].BoolData)
                             {
-                                MixedRealityToolkit.InputSystem?.RaiseOnInputDown(InputSource, ControllerHandedness, Interactions[i].MixedRealityInputAction);
+                                InputSystem?.RaiseOnInputDown(InputSource, ControllerHandedness, Interactions[i].MixedRealityInputAction);
                             }
                             else
                             {
-                                MixedRealityToolkit.InputSystem?.RaiseOnInputUp(InputSource, ControllerHandedness, Interactions[i].MixedRealityInputAction);
+                                InputSystem?.RaiseOnInputUp(InputSource, ControllerHandedness, Interactions[i].MixedRealityInputAction);
                             }
                         }
                         break;
@@ -145,7 +141,7 @@ namespace Microsoft.MixedReality.Toolkit.Input
                         Interactions[i].PoseData = currentIndexPose;
                         if (Interactions[i].Changed)
                         {
-                            MixedRealityToolkit.InputSystem?.RaisePoseInputChanged(InputSource, ControllerHandedness, Interactions[i].MixedRealityInputAction, currentIndexPose);
+                            InputSystem?.RaisePoseInputChanged(InputSource, ControllerHandedness, Interactions[i].MixedRealityInputAction, currentIndexPose);
                         }
                         break;
                 }

@@ -1,33 +1,44 @@
-# Object Collection
-![Object Collection](../External/ReadMeImages/ObjectCollection/MRTK_ObjectCollection_Main.png)
+# Object collection #
 
-Object collection is a script which helps you lay out an array of objects in predefined three-dimensional shapes. It supports five different surface styles - plane, cylinder, sphere, scatter, and radial. You can adjust the radius, size and the space between the items. Since it supports any object in Unity, you can use it to layout both 2D and 3D objects.
+![Object collection](../Documentation/Images/ObjectCollection/MRTK_ObjectCollection_Main.jpg)
+
+Object collection is a script to help lay out an array of objects in predefined three-dimensional shapes. It supports various surface styles including plane, cylinder, sphere, and radial. Radius, size, and the space between the items can be adjusted. Since it supports any object in Unity, it can be used to layout both 2D and 3D objects.
+
+# Object collection scripts #
+- [`GridObjectCollection.cs`](https://github.com/Microsoft/MixedRealityToolkit-Unity/blob/mrtk_release/Assets/MixedRealityToolkit.SDK/Features/UX/Scripts/Collections/GridObjectCollection.cs) supports Cylinder, Plane, Sphere, Radial surface types
+- [`ScatterObjectCollection.cs`](https://github.com/Microsoft/MixedRealityToolkit-Unity/blob/mrtk_release/Assets/MixedRealityToolkit.SDK/Features/UX/Scripts/Collections/ScatterObjectCollection.cs) supports scattered style collection  
+- [`TileGridObjectCollection.cs`](https://github.com/Microsoft/MixedRealityToolkit-Unity/blob/mrtk_release/Assets/MixedRealityToolkit.SDK/Features/UX/Scripts/Collections/TileGridObjectCollection.cs) provides some additional options to GridObjectCollection.
+
+|![Grid Object Collection - Cylinder](../Documentation/Images/ObjectCollection/MRTK_ObjectCollectionCylinder.png) Grid Object Collection - Cylinder | ![Grid Object Collection - Sphere](../Documentation/Images/ObjectCollection/MRTK_ObjectCollectionSphere.png) Grid Object Collection - Sphere |
+|:--- | :--- |
+|![Grid Object Collection - Radial](../Documentation/Images/ObjectCollection/MRTK_ObjectCollectionRadial.png) Grid Object Collection - Radial | ![Grid Object Collection - Plane](../Documentation/Images/ObjectCollection/MRTK_ObjectCollectionPlane.png) Grid Object Collection - Plane |
+|![Scattered Object Collection](../Documentation/Images/ObjectCollection/MRTK_ObjectCollectionScattered.png) Scattered Object Collection | ![Tile Grid Object Collection](../Documentation/Images/ObjectCollection/MRTK_ObjectCollectionTileGrid.png) Tile Grid Object Collection |
+
+
+## How to use an object collection ##
+
+To create a collection, create an empty GameObject and assign one of the Object Collection scripts to it. Any object(s) can be added as a child of the GameObject. Once finished adding child objects, click the *Update Collection* button in the inspector panel to generate the object collection. The objects will be laid out in the scene according to the selected surface type. Update Collection can be accessed thorugh the code too.
+
+
+
+
+![Object collection](../Documentation/Images/ObjectCollection/MRTK_ObjectCollectionScript.png)
 
 ## Object collection examples ##
-Periodic Table of the Elements is an example app that demonstrates how Object collection works. It uses Object collection to layout the 3D element boxes in different shapes.
 
-![Object Collection](../External/ReadMeImages/ObjectCollection/MRTK_ObjectCollection_Types.jpg)
+The [ObjectCollectionExamples.unity](https://github.com/Microsoft/MixedRealityToolkit-Unity/blob/mrtk_release/Assets/MixedRealityToolkit.Examples/Demos/UX/Collections/Scenes/ObjectCollectionExamples.unity) example scene contains various examples of object collection types.
 
-### 3D Objects ###
+[Periodic table of the elements](https://github.com/Microsoft/MRDesignLabs_Unity_PeriodicTable) is an example app that demonstrates how object collections work. It uses object collection to layout the 3D element boxes in different shapes.
 
-You can use Object collection to layout imported 3D objects. The example below shows the plane and cylindrical layouts of 3D chair model objects using Object collection.
+## Object collection types ##
 
-![Object Collection](../External/ReadMeImages/ObjectCollection/MRTK_ObjectCollection_3DObjects.jpg)
+**3D objects**
+An object collection can be used to layout imported 3D objects. The example below shows the plane and cylindrical layouts of 3D chair model objects using a collection.
 
-### 2D Objects ###
+![Object collection](../Documentation/Images/ObjectCollection/MRTK_ObjectCollection_3DObjects.jpg)
 
-You can also use 2D images with Object collection. For example, you can easily display multiple images in grid style using Object collection.
+**2D Objects**
 
-![Object Collection](../External/ReadMeImages/ObjectCollection/MRTK_ObjectCollection_Layout_2DImages.jpg)
+An object collection can also be crated from 2D images. For example, multiple images can be placed in a grid style.
 
-## Ways to use Object collection ##
-You can find the examples in the scene **ObjectCollection_Examples.unity**. In this scene, you can find the **ObjectCollection.cs** script under **MixedRealityToolkit.SDK\Features\UX\Scripts\Collections**
-
-1. To create a collection, simply create an empty GameObject and assign the ObjectCollection.cs script to it. 
-2. Then you can add any object(s) as a child of the GameObject. 
-3. Once you finished adding a child object, click the **Update Collection** button in the Inspector Panel. 
-4. You will then see the object(s) laid out in selected Surface Type. 
-
-![Object Collection](../External/ReadMeImages/ObjectCollection/MRTK_ObjectCollection_Unity.jpg)
-
-![Object Collection](../External/ReadMeImages/ObjectCollection/MRTK_ObjectCollection_ExampleScene1.jpg)
+![Object collection](../Documentation/Images/ObjectCollection/MRTK_ObjectCollection_Layout_2DImages.jpg)

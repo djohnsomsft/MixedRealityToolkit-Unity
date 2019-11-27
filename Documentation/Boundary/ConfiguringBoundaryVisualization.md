@@ -13,14 +13,14 @@ Boundary visualizations are attached to the Mixed Reality Playspace object in th
 
 ## General Settings
 
-![Boundary Visualization General Settings](../../External/ReadMeImages/Boundary/BoundaryVisualizationGeneralSettings.png)
+![Boundary Visualization General Settings](../../Documentation/Images/Boundary/BoundaryVisualizationGeneralSettings.png)
 ### Boundary Height
 
 The boundary height indicates the distance above the floor plane at which the boundary ceiling should be rendered. The default value is 3 meters.
 
 ## Floor Settings
 
-![Boundary Visualization Floor Settings](../../External/ReadMeImages/Boundary/BoundaryVisualizationFloorSettings.png)
+![Boundary Visualization Floor Settings](../../Documentation/Images/Boundary/BoundaryVisualizationFloorSettings.png)
 
 ### Show
 
@@ -40,7 +40,7 @@ The layer on which the floor plane should be set. The default value is the Defau
 
 ## Play Area Settings
 
-![Boundary Visualization Play Area Settings](../../External/ReadMeImages/Boundary/BoundaryVisualizationPlayAreaSettings.png)
+![Boundary Visualization Play Area Settings](../../Documentation/Images/Boundary/BoundaryVisualizationPlayAreaSettings.png)
 
 ### Show
 
@@ -56,7 +56,7 @@ The layer on which the play area should be set. The default value is the Ignore 
 
 ## Tracked Area Settings
 
-![Boundary Visualization Tracked Area Settings](../../External/ReadMeImages/Boundary/BoundaryVisualizationTrackedAreaSettings.png)
+![Boundary Visualization Tracked Area Settings](../../Documentation/Images/Boundary/BoundaryVisualizationTrackedAreaSettings.png)
 
 ### Show
 
@@ -72,7 +72,7 @@ The layer on which the tracked area should be sets. The default value is the Ign
 
 ## Boundary Wall Settings
 
-![Boundary Visualization Boundary Wall Settings](../../External/ReadMeImages/Boundary/BoundaryVisualizationWallSettings.png)
+![Boundary Visualization Boundary Wall Settings](../../Documentation/Images/Boundary/BoundaryVisualizationWallSettings.png)
 
 ### Show
 
@@ -86,11 +86,12 @@ Indicates the material that should be used when creating the boundary wall plane
 
 The layer on which the boundary walls should be set. The default value is the Ignore Raycast layer.
 
+> [!NOTE]
 > Setting the boundary wall component to a physics layer other than Ignore Raycast may prevent users from interacting with objects within the scene.
 
 ## Boundary Ceiling Settings
 
-![Boundary Visualization Boundary Ceiling Settings](../../External/ReadMeImages/Boundary/BoundaryVisualizationCeilingSettings.png)
+![Boundary Visualization Boundary Ceiling Settings](../../Documentation/Images/Boundary/BoundaryVisualizationCeilingSettings.png)
 
 ### Show
 
@@ -104,9 +105,9 @@ Indicates the material that should be used when creating the boundary ceiling pl
 
 The layer on which the boundary walls should be set. The default value is the Ignore Raycast layer.
 
+> [!NOTE]
 > Setting the boundary ceiling component to a physics layer other than Ignore Raycast may prevent users from interacting with objects within the scene.
 
 ## See Also
 
 - [Boundary System](BoundarySystemGettingStarted.md)
-- [Using Boundaries in an Application](../TODO.md)

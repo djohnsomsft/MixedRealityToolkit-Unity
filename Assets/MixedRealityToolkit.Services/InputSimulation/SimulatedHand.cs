@@ -8,23 +8,93 @@ using UnityEngine;
 
 namespace Microsoft.MixedReality.Toolkit.Input
 {
+    /// <summary>
+    /// Snapshot of simulated hand data.
+    /// </summary>
+    [System.Serializable]
+    public class SimulatedHandData
+    {
+        private static readonly int jointCount = Enum.GetNames(typeof(TrackedHandJoint)).Length;
+
+        [SerializeField]
+        private bool isTracked = false;
+        public bool IsTracked => isTracked;
+        [SerializeField]
+        private MixedRealityPose[] joints = new MixedRealityPose[jointCount];
+        public MixedRealityPose[] Joints => joints;
+        [SerializeField]
+        private bool isPinching = false;
+        public bool IsPinching => isPinching;
+
+        public delegate void HandJointDataGenerator(MixedRealityPose[] jointPoses);
+
+        private IMixedRealityInputSystem inputSystem = null;
+
+        /// <summary>
+        /// The active instance of the input system.
+        /// </summary>
+        private IMixedRealityInputSystem InputSystem
+        {
+            get
+            {
+                if (inputSystem == null)
+                {
+                    MixedRealityServiceRegistry.TryGetService<IMixedRealityInputSystem>(out inputSystem);
+                }
+                return inputSystem;
+            }
+        }
+
+        public void Copy(SimulatedHandData other)
+        {
+            isTracked = other.isTracked;
+            isPinching = other.isPinching; 
+            for (int i = 0; i < jointCount; ++i)
+            {
+                joints[i] = other.joints[i];
+            }
+        }
+
+        /// <summary>
+        /// Replace the hand data with the given values.
+        /// </summary>
+        /// <returns>True if the hand data has been changed.</returns>
+        /// <param name="isTrackedNew">True if the hand is currently tracked.</param>
+        /// <param name="isPinchingNew">True if the hand is in a pinching pose that causes a "Select" action.</param>
+        /// <param name="generator">Generator function that produces joint positions and rotations. The joint data generator is only used when the hand is tracked.</param>
+        /// <remarks>The timestamp of the hand data will be the current time, see [DateTime.UtcNow](https://docs.microsoft.com/en-us/dotnet/api/system.datetime.utcnow?view=netframework-4.8).</remarks>
+        public bool Update(bool isTrackedNew, bool isPinchingNew, HandJointDataGenerator generator)
+        {
+            bool handDataChanged = false;
+
+            if (isTracked != isTrackedNew || isPinching != isPinchingNew)
+            {
+                isTracked = isTrackedNew;
+                isPinching = isPinchingNew;
+                handDataChanged = true;
+            }
+
+            if (isTracked)
+            {
+                generator(Joints);
+                handDataChanged = true;
+            }
+
+            return handDataChanged;
+        }
+    }
+
     public abstract class SimulatedHand : BaseHand
     {
         public abstract HandSimulationMode SimulationMode { get; }
 
         protected static readonly int jointCount = Enum.GetNames(typeof(TrackedHandJoint)).Length;
 
-        protected readonly Quaternion[] jointOrientations = new Quaternion[jointCount];
-        protected readonly Vector3[] jointPositions = new Vector3[jointCount];
         protected readonly Dictionary<TrackedHandJoint, MixedRealityPose> jointPoses = new Dictionary<TrackedHandJoint, MixedRealityPose>();
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="trackingState"></param>
-        /// <param name="controllerHandedness"></param>
-        /// <param name="inputSource"></param>
-        /// <param name="interactions"></param>
         protected SimulatedHand(TrackingState trackingState, Handedness controllerHandedness, IMixedRealityInputSource inputSource = null, MixedRealityInteractionMapping[] interactions = null)
                 : base(trackingState, controllerHandedness, inputSource, interactions)
         {}
@@ -36,25 +106,21 @@ namespace Microsoft.MixedReality.Toolkit.Input
 
         public void UpdateState(SimulatedHandData handData)
         {
-            Array.Copy(handData.Joints, jointPositions, jointCount);
-
-            SimulatedHandUtils.CalculateJointRotations(ControllerHandedness, jointPositions, jointOrientations);
-
-            for (int i = 0; i < jointPositions.Length; i++)
+            for (int i = 0; i < jointCount; i++)
             {
                 TrackedHandJoint handJoint = (TrackedHandJoint)i;
 
                 if (!jointPoses.ContainsKey(handJoint))
                 {
-                    jointPoses.Add(handJoint, new MixedRealityPose(jointPositions[i], jointOrientations[i]));
+                    jointPoses.Add(handJoint, handData.Joints[i]);
                 }
                 else
                 {
-                    jointPoses[handJoint] = new MixedRealityPose(jointPositions[i], jointOrientations[i]);
+                    jointPoses[handJoint] = handData.Joints[i];
                 }
             }
 
-            MixedRealityToolkit.InputSystem?.RaiseHandJointsUpdated(InputSource, ControllerHandedness, jointPoses);
+            InputSystem?.RaiseHandJointsUpdated(InputSource, ControllerHandedness, jointPoses);
 
             UpdateVelocity();
 

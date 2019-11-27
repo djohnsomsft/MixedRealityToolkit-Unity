@@ -7,8 +7,8 @@ namespace Microsoft.MixedReality.Toolkit.Input
 {
     /// <summary>
     /// Describes a source change event.
-    /// <remarks>Source State events do not have an associated <see cref="MixedRealityInputAction"/>.</remarks>
     /// </summary>
+    /// <remarks>Source State events do not have an associated <see cref="MixedRealityInputAction"/>.</remarks>
     public class SourcePoseEventData<T> : SourceStateEventData
     {
         /// <summary>
@@ -22,9 +22,6 @@ namespace Microsoft.MixedReality.Toolkit.Input
         /// <summary>
         /// Populates the event with data.
         /// </summary>
-        /// <param name="inputSource"></param>
-        /// <param name="controller"></param>
-        /// <param name="data"></param>
         public void Initialize(IMixedRealityInputSource inputSource, IMixedRealityController controller, T data)
         {
             Initialize(inputSource, controller);

@@ -5,13 +5,16 @@ using Microsoft.MixedReality.Toolkit.Input.Editor;
 using Microsoft.MixedReality.Toolkit.Input;
 using UnityEditor;
 
-namespace Microsoft.MixedReality.Toolkit.UI.Inspectors.UX.Pointers
+namespace Microsoft.MixedReality.Toolkit.Input
 {
     [CustomEditor(typeof(SpherePointer))]
     public class SpherePointerInspector : BaseControllerPointerInspector
     {
         private SerializedProperty sphereCastRadius;
-        private SerializedProperty debugMode;
+        private SerializedProperty nearObjectMargin;
+        private SerializedProperty grabLayerMasks;
+        private SerializedProperty triggerInteraction;
+
 
         private bool spherePointerFoldout = true;
 
@@ -20,7 +23,9 @@ namespace Microsoft.MixedReality.Toolkit.UI.Inspectors.UX.Pointers
             base.OnEnable();
 
             sphereCastRadius = serializedObject.FindProperty("sphereCastRadius");
-            debugMode = serializedObject.FindProperty("debugMode");
+            nearObjectMargin = serializedObject.FindProperty("nearObjectMargin");
+            grabLayerMasks = serializedObject.FindProperty("grabLayerMasks");
+            triggerInteraction = serializedObject.FindProperty("triggerInteraction");
         }
 
         public override void OnInspectorGUI()
@@ -33,10 +38,13 @@ namespace Microsoft.MixedReality.Toolkit.UI.Inspectors.UX.Pointers
 
             if (spherePointerFoldout)
             {
-                EditorGUI.indentLevel++;
-                EditorGUILayout.PropertyField(sphereCastRadius);
-                EditorGUILayout.PropertyField(debugMode);
-                EditorGUI.indentLevel--;
+                using (new EditorGUI.IndentLevelScope())
+                {
+                    EditorGUILayout.PropertyField(sphereCastRadius);
+                    EditorGUILayout.PropertyField(nearObjectMargin);
+                    EditorGUILayout.PropertyField(triggerInteraction);
+                    EditorGUILayout.PropertyField(grabLayerMasks, true);
+                }
             }
 
             serializedObject.ApplyModifiedProperties();
